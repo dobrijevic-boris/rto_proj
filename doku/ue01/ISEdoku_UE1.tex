@@ -1,0 +1,258 @@
+% Systemdokumentation OOP3
+% Unterlage für Studenten als Leitfaden für die Erstellung einer SystemDoku
+% 17. Oktober 2022
+% ---------------------------------------------------------------------------
+
+
+
+% Dokumentklasse
+% --------------
+\documentclass[12pt,naustrian,a4widepaper]{scrartcl}   
+% article style
+%   - 11pt Schriftgroesse
+%   - new austrian (neue Rechtschreibung)
+%   - Papierformat A4
+%   - pdf-hyperlinks
+
+
+% Packages
+% --------
+\usepackage[utf8]{inputenc}  % fuer Umlaute, äöü
+\usepackage[T1]{fontenc}
+\usepackage{a4wide}
+\usepackage{times}      % Times Schriften (zusammen mit fontencoding, s.o.)
+
+\usepackage{babel}
+\usepackage{graphicx}	  % für das Einbinden von Grafiken
+\usepackage{color}      % für färbigen Text
+\usepackage{framed}     % für (Text-) Rahmen
+\usepackage{fancyhdr}   % für Kopf- und Fusszeilen
+\usepackage{listings}   % für den Sourcecode
+\usepackage{pdfpages}	% pdf import fuer angabe
+
+\pagestyle{fancy}       % Kopf- / Fusszeile aktivieren
+
+
+\lstset{
+	language={C++},
+	basicstyle=\footnotesize\ttfamily,
+	keywordstyle=\color{blue},%\bfseries,
+	commentstyle=\color{green},
+	frame=single,
+	linewidth=16cm,
+	breaklines=false,
+	tabsize=3,
+	numbers=left, numberstyle=\tiny, stepnumber=1, numbersep=5pt
+}
+
+% Seitenspiegel
+% -------------
+
+\typearea{8}	% Festlegung des Seitenspiegels gem. Koma. 4..groß, 9..klein
+
+
+% Kopfzeile
+% ---------
+\lhead{{\footnotesize{Maximilian Ebert, Boris Dobrijevic}}}   %  (links)
+\rhead{{\footnotesize{Seite \thepage}}}      %  (rechts)
+
+% Fusszeile
+% ---------
+\lfoot{}  % links
+\cfoot{}  % mitte 
+\rfoot{}  % rechts
+
+% Absatzformatierung
+% ------------------
+\setlength{\parindent}{0cm}   % Einrückung der 1. Zeile jedes Absatzes
+\setlength{\parskip}{10pt}    % Abstand zwischen den Absätzen
+
+
+% Package für Hyperlinks (mit pdf-Optionen)
+% -----------------------------------------
+\usepackage[
+urlcolor=blue,		% blaue weblinks
+linkcolor=black,	% interne Links sind schwarz
+colorlinks=true,        % links werden eingefürbt
+pdfstartview=FitH,      % PDF-Anzeige: Fensterbreite
+pdfborder={0 0 0},      % keine Umrandung um links
+pdftitle   ={Systemdokumentation},% Referenzen in der Pdf-Datei
+pdfauthor  ={Maximilian Ebert, Boris Dobrijevic},
+pdfsubject ={Systemdoku},
+pdfcreator ={Der Creator},
+pdfproducer={Der Producer},
+pdfkeywords={Dokumentation, Systemdokumentation}
+]{hyperref}
+
+
+% Beginn des Dokumentes
+% ---------------------
+\begin{document}
+
+\selectlanguage{naustrian}   % oder "american" für engl. Texte
+
+
+% Titelblatt
+% ----------
+\title {\vspace{1cm}
+       \includegraphics[width=8cm]{./Images/esd}\\
+       \vspace{2cm}
+       {\textbf{Dokumentation\\Übung 01}}\\
+       \vspace{5mm}
+       {\small{Version 1.0}}\\
+       \vspace{5mm}
+}
+
+\author{\small{Maximilian Ebert, Boris Dobrijevic}}
+\date  {\small{Hagenberg, \today}}
+\maketitle
+
+%\begin{abstract}
+%Dieses Dokument zeigt den prinzipiellen Aufbau einer Systemdokumentation für Software-Projekte. Die einzelnen Kapitel sind mit Kommentaren versehen, welche die Struktur und den Inhalt erläutern. 
+%\end{abstract}
+
+\includepdf[pages=1]{uebung_1_RTO_1.pdf}
+
+
+\clearpage
+
+% Inhalts-, Tabellen- und Bildverzeichnis (werden generiert)
+% ----------------------------------------------------------
+\tableofcontents
+% \listoftables
+% \listoffigures
+\clearpage
+
+\section{Anforderungsdefinition (Systemspezifikation)}
+
+In diesem System werden die Tiere eines Zoo's abgebildet und dort gespeichert. Die Tiere speichern das Gewicht in Kilogramm als Ganzzahl und werden mit einer forlaufenden Nummer identifiziert. Sie besitzen eine gemeinsame Schnittstelle die folgende Funktionalität liefert:
+\begin{itemize}
+	\item Gib einen Laut (entsprechende Ausgabe auf std::cout).
+	\item Liefere einen String mit den gespeicherten Attributen.
+	\item Erstelle einen Klon von sich selbst.
+\end{itemize}
+
+Der Zoo speichert alle Tiere und besitzt die Tier-Objekte nach dem Hinzufügen. Via Zugriffsmethoden kann auf die Tiere zugegriffen werden und eine String-Methode liefert eine Repräsentation aller Tiere im Zoo mit allen Attributen als eine abgeschlossene Zeichenkette. Zusätzlich kann der Zoo inklusive all seiner Tiere kopiert und zugewiesen werden.
+
+
+
+
+\clearpage
+
+\section{Systementwurf}
+
+\subsection{Klassendiagramm}
+\color{blue}
+Hier wird das Klassendiagramm eingefügt. Sollte dieses nicht auf eine A4-Seite passen, so kann es in eine eingene pdf-Datei ausgelagert werden.
+Verweisen Sie an dieser Stelle auf diese Datei.
+
+\subsection{Designentscheidungen}
+	Im Klassendiagramm wurde der Polymorphismus angewendet, um unterschiedliche Tierarten mit der gemeinsamen Schnittstelle 'Animal' anzusprechen. Die Klasse 'Zoo' speichert einen Container mit der abstrakte Basisklasse 'Animal' als Elementtyp und kann somit alle bestehenden und auch neuen Tierarten verwalten, die sich von der gemeinsamen Basisklasse 'Animal' ableiten.
+
+\color{blue}
+Designentscheidungen sind von entscheidender Bedeutung für die Qualität und den Erfolg einer Softwareanwendung. Sie beeinflussen nicht nur die technische Umsetzung, sondern auch die Fähigkeit der Anwendung, zukünftigen Anforderungen gerecht zu werden und Änderungen effizient zu bewältigen.\\
+Sie beantworten meist folgende Fragen:\\
+\begin{itemize}
+	\item Warum wurde die Klassenhierarchie so gewählt?
+	\item Wurden Design Pattern verwendet und warum?
+	\item Wurde Abstraktion und der Polymorphismus angewendet?
+	\item Wie kann die Klassenstruktur einfach erweitert werden?
+	\item 
+\end{itemize}
+
+\color{black}
+
+\section{Dokumentation der Komponenten (Klassen)}
+\color{blue}
+Die Dokumentation der einzelnen Klassen und Komponenten erfolgt direkt im Quellcode mit Doxygen-Kommentaren. Erzeugen Sie danach 
+eine HTML-Doku und verweisen Sie auf die Start-HTML-Datei.\\
+
+\color{black}
+Die HTML-Startdatei befindet sich im Verzeichnis \url{SimpleAnimal\\doxy\\index.html}
+
+\clearpage
+\section{Testprotokollierung}
+
+\begin{verbatim}
+test cats and dogs:
+Minka's ID: 0
+Minka's weight: 2
+Minka's tongue: miaow
+Rolfi's ID: 1
+Rolfi's weight: 7
+Rolfi's tongue: bark
+attributes...ok
+CopyCTor...ok
+AssignOp...ok
+Clone...ok
+zoo gives tongue:
+bark
+miaow
+bark
+miaow
+output Zoo's string:
+This zoo has 4 animals:
+ID:3 I'm a dog and my weight is 35
+ID:4 I'm a cat and my weight is 15
+ID:2 I'm a dog and my weight is 4711
+ID:0 I'm a cat and my weight is 2
+
+CopyCTor of Zoo...ok
+AssignOp of Zoo...ok
+AssignOp of Zoo...ok
+null_pointer param in Zoo::Add(...)
+test invalid param in Zoo::Add....ok
+tests finished...
+\end{verbatim}
+
+\clearpage
+\section{Quellcode}
+\color{blue}
+Die Klassen werden entsprechend der Klassenhierarchie von oben nach unten angegeben. Zuerst die Header-Datei, gefolgt von der Implementierung.
+Der Testtreiber (oder Client-Klassen) werden am Ende angegeben.
+\color{black}
+
+%\subsection{Object.h}
+%\lstinputlisting{./../Object.h}
+%
+%\subsection{Object.cpp}
+%\lstinputlisting{./../Object.cpp}
+%
+%\subsection{Animal.h}
+%\lstinputlisting{./../Animal.h}
+%
+%\subsection{Animal.cpp}
+%\lstinputlisting{./../Animal.cpp}
+%
+%\subsection{Cat.h}
+%\lstinputlisting{./../Cat.h}
+%
+%\subsection{Cat.cpp}
+%\lstinputlisting{./../Cat.cpp}
+%
+%\subsection{Dog.h}
+%\lstinputlisting{./../Dog.h}
+%
+%\subsection{Dog.cpp}
+%\lstinputlisting{./../Dog.cpp}
+%
+%\subsection{Zoo.h}
+%\lstinputlisting{./../Zoo.h}
+%
+%\subsection{Zoo.cpp}
+%\lstinputlisting{./../Zoo.cpp}
+%
+%\subsection{Testtreiber - SimpleAnimal.cpp}
+%\lstinputlisting{./../SimpleAnimal.cpp}
+
+% Literaturverzeichnis
+% --------------------
+%\begin{thebibliography}{99}
+%\bibitem{Pomberger} Pomberger G., Blaschek G. : \textit{Software Engineering: Prototyping und objektorientert Software-Entwicklung}. Hanser, 1996
+%
+%\end{thebibliography}
+
+
+% Ende des Dokuments
+% ------------------
+\end{document}
