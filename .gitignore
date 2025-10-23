@@ -53,3 +53,94 @@ dkms.conf
 
 # debug information files
 *.dwo
+
+# ------------------------------------------------
+# Core LaTeX build files
+# ------------------------------------------------
+*.aux
+*.bbl
+*.blg
+*.brf
+*.idx
+*.ilg
+*.ind
+*.lof
+*.log
+*.lot
+*.out
+*.toc
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.synctex(busy)
+*.pdfsync
+
+# ------------------------------------------------
+# Intermediate files
+# ------------------------------------------------
+*.dvi
+*.xdv
+*.nav
+*.snm
+*.vrb
+*.ps
+*.eps
+
+# ------------------------------------------------
+# Editor and tool-specific files
+# ------------------------------------------------
+*.bak
+*.backup
+*.tmp
+*.swp
+*~
+# VS Code
+.vscode/
+# TeXShop
+*.texshop
+# TeXworks
+*.pdftex
+# LyX
+*.lyx~
+
+# ------------------------------------------------
+# Output files
+# ------------------------------------------------
+*.pdf
+# Uncomment the next line if you DO want to keep built PDFs
+# !main.pdf
+
+# ------------------------------------------------
+# Build directories
+# ------------------------------------------------
+build/
+out/
+output/
+auto/
+
+# ------------------------------------------------
+# Auxiliary bibliography tools
+# ------------------------------------------------
+*.run.xml
+*.bcf
+*.blx.bib
+
+# ------------------------------------------------
+# Glossaries, nomenclatures, and indices
+# ------------------------------------------------
+*.acn
+*.acr
+*.alg
+*.glg
+*.glo
+*.gls
+*.ist
+*.xdy
+*.nlo
+*.nls
+
+# ------------------------------------------------
+# Latexmk, arara, and other automation tools
+# ------------------------------------------------
+*.latexmk
+*.arara
