@@ -1,7 +1,9 @@
 #ifndef TASK_MANDELBROT_H
 #define TASK_MANDELBROT_H
 
-void TaskMandelbrot (void);
+#include "StdDef.h"
+
+BOOL TaskMandelbrot (void);
 
 #endif
 
