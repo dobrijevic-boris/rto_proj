@@ -25,7 +25,7 @@
 /* Private define ------------------------------------------------------------*/
 #define TASK_SCHEDULER_COUNTER  (uint32_t)20    // task counter max time between calls
 #define TASK_SCHEDULER_KEY      (uint32_t)50    // task key max time between calls
-#define TASK_SCHEDULER_LED      (uint32_t)100   // task led max time between calls
+#define TASK_SCHEDULER_LED      (uint32_t)100    // task led max time between calls
 #define TASK_SCHEDULER_WATCH    (uint32_t)1000  // task watch max time between calls
 #define TASK_SCHEDULER_POTI     (uint32_t)50    // task poti max time between calls
 
