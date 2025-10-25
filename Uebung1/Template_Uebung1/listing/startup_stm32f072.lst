@@ -395,11 +395,11 @@ ARM Macro Assembler    Page 7
 
 
 Command Line: --debug --xref --diag_suppress=9931,A1950W --cpu=Cortex-M0 --depe
-nd=.\output\startup_stm32f072.d -o.\output\startup_stm32f072.o -IC:\Users\bayer
-\AppData\Local\Arm\Packs\Keil\STM32F0xx_DFP\2.1.1\Drivers\CMSIS\Device\ST\STM32
-F0xx\Include --predefine="__EVAL SETA 1" --predefine="__MICROLIB SETA 1" --pred
-efine="__UVISION_VERSION SETA 538" --predefine="STM32F072xB SETA 1" --list=.\li
-sting\startup_stm32f072.lst src\Devices\startup_stm32f072.s
+nd=.\output\startup_stm32f072.d -o.\output\startup_stm32f072.o -IC:\Users\dobri
+pc\AppData\Local\Arm\Packs\Keil\STM32F0xx_DFP\2.1.1\Drivers\CMSIS\Device\ST\STM
+32F0xx\Include --predefine="__EVAL SETA 1" --predefine="__MICROLIB SETA 1" --pr
+edefine="__UVISION_VERSION SETA 541" --predefine="STM32F072xB SETA 1" --list=.\
+listing\startup_stm32f072.lst src\Devices\startup_stm32f072.s
 
 
 

@@ -30,73 +30,77 @@
 #define TASK_SCHEDULER_POTI     (uint32_t)50    // task poti max time between calls
 
 
-int main(void)
-{
-  Key_Init();
-  Led_Init();
-  Tft_Init();
-  Tft_SetFont(&TftFont_16x24);
-  Adc_Init(ADC_CHANNEL_POTENTIOMETER);	
-  Tick_InitSysTick();
-	Debug_Init();
-  
-  for(uint16_t i=0;i<1000;i++)
-    {
-      
-      Debug_SwitchDebugPin(DEBUG_PIN_TASKLED, Bit_SET);
-      Debug_SwitchDebugPin(DEBUG_PIN_TASKLED, Bit_RESET);
-    }
-  while (1)
-  {
-    // scheduler
-    static uint32_t lastCounter = 0;
-    static uint32_t lastKey = 0;
-    static uint32_t lastPoti = 0;
-    static uint32_t lastWatch = 0;
-    static uint32_t lastLed = 0;
-    static uint32_t lastMandelbrot = 0;
-    static uint32_t lastTick = 0; // save Ticks from last cycle
-    const uint32_t sysTicks = SysTick_GetTicks() - lastTick;
+int main(void) {
     
-    if(sysTicks - lastCounter > TASK_SCHEDULER_COUNTER) {
-      Debug_SwitchDebugPin(DEBUG_PIN_TASKCOUNTER, Bit_SET);
-      TaskCounter();
-      Debug_SwitchDebugPin(DEBUG_PIN_TASKCOUNTER, Bit_RESET);
-    } 
-    else if(sysTicks - lastKey > TASK_SCHEDULER_KEY) {
-      Debug_SwitchDebugPin(DEBUG_PIN_TASKKEY, Bit_SET);
-      TaskKey();
-      Debug_SwitchDebugPin(DEBUG_PIN_TASKKEY, Bit_RESET);
-    }
-    else if(sysTicks - lastPoti > TASK_SCHEDULER_POTI) {
-      Debug_SwitchDebugPin(DEBUG_PIN_TASKPOTI, Bit_SET);
-      TaskPoti();	
-      Debug_SwitchDebugPin(DEBUG_PIN_TASKPOTI, Bit_RESET);
-    }  
-    else if(sysTicks - lastWatch > TASK_SCHEDULER_WATCH) {
-      Debug_SwitchDebugPin(DEBUG_PIN_TASKWATCH, Bit_SET);
-      TaskWatch();
-      Debug_SwitchDebugPin(DEBUG_PIN_TASKWATCH, Bit_RESET);
-    } 
-    else if(sysTicks - lastLed > TASK_SCHEDULER_LED) {
-      Debug_SwitchDebugPin(DEBUG_PIN_TASKLED, Bit_SET);
-      TaskLed();	
-      Debug_SwitchDebugPin(DEBUG_PIN_TASKLED, Bit_RESET);
-    }
-    else
-    {
-      // if no other task executed this cycle, execute mandelbrot
-      Debug_SwitchDebugPin(DEBUG_PIN_TASKMANDELBROT, Bit_SET);
-      TaskMandelbrot();		
-      Debug_SwitchDebugPin(DEBUG_PIN_TASKMANDELBROT, Bit_RESET);
-    }
+    Key_Init();
+    Led_Init();
+    Tft_Init();
+    Tft_SetFont(&TftFont_16x24);
+    Adc_Init(ADC_CHANNEL_POTENTIOMETER);	
+    Tick_InitSysTick();
+    Debug_Init();
     
-    
-    
-		Tft_ClearScreen();
-    
+    BOOL mandelbrotFinished = FALSE;
+    while (1) {
+        static uint32_t lastCounter = 0;
+        static uint32_t lastKey = 0;
+        static uint32_t lastPoti = 0;
+        static uint32_t lastWatch = 0;
+        static uint32_t lastLed = 0;
 
-  }
+        static uint32_t lastTick = 0;
+        uint32_t now = SysTick_GetTicks();
+        uint32_t delta = now - lastTick;
+        lastTick = now;
+
+        // Zeitaufsummierung
+        lastCounter += delta;
+        lastKey     += delta;
+        lastPoti    += delta;
+        lastWatch   += delta;
+        lastLed     += delta;
+
+        if (lastCounter >= TASK_SCHEDULER_COUNTER) {
+            Debug_SwitchDebugPin(DEBUG_PIN_TASKCOUNTER, Bit_SET);
+            TaskCounter();
+            Debug_SwitchDebugPin(DEBUG_PIN_TASKCOUNTER, Bit_RESET);
+            lastCounter = 0;
+        }
+        else if (lastKey >= TASK_SCHEDULER_KEY) {
+            Debug_SwitchDebugPin(DEBUG_PIN_TASKKEY, Bit_SET);
+            TaskKey();
+            Debug_SwitchDebugPin(DEBUG_PIN_TASKKEY, Bit_RESET);
+            lastKey = 0;
+        }
+        else if (lastPoti >= TASK_SCHEDULER_POTI) {
+            Debug_SwitchDebugPin(DEBUG_PIN_TASKPOTI, Bit_SET);
+            TaskPoti();
+            Debug_SwitchDebugPin(DEBUG_PIN_TASKPOTI, Bit_RESET);
+            lastPoti = 0;
+        }
+        else if (lastWatch >= TASK_SCHEDULER_WATCH) {
+            Debug_SwitchDebugPin(DEBUG_PIN_TASKWATCH, Bit_SET);
+            TaskWatch();
+            Debug_SwitchDebugPin(DEBUG_PIN_TASKWATCH, Bit_RESET);
+            lastWatch = 0;
+        }
+        else if (lastLed >= TASK_SCHEDULER_LED) {
+            Debug_SwitchDebugPin(DEBUG_PIN_TASKLED, Bit_SET);
+            TaskLed();
+            Debug_SwitchDebugPin(DEBUG_PIN_TASKLED, Bit_RESET);
+            lastLed = 0;
+        }
+        else {
+            // kein anderer Task fällig ? Mandelbrot
+            Debug_SwitchDebugPin(DEBUG_PIN_TASKMANDELBROT, Bit_SET);
+            mandelbrotFinished = TaskMandelbrot();
+            Debug_SwitchDebugPin(DEBUG_PIN_TASKMANDELBROT, Bit_RESET);
+
+            if (mandelbrotFinished) {
+                Tft_ClearScreen();
+            }
+        }
+    }
 }
 
 
