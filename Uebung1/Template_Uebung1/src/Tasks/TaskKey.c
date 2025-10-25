@@ -31,8 +31,9 @@ void TaskKey (void)
     } else if(keyState_WakeUp) {
         Tft_SetForegroundColourRgb16(TFT_COLOR_BLACK);
     }
+    // draw key state
     char buf[32];   // buffer for text
-    snprintf(buf, sizeof(buf), "User0: %d", keyState_User0);
+    snprintf(buf, sizeof(buf), "User0:%d User1:%d Wakeup:%d", keyState_User0, keyState_User1, keyState_WakeUp);
     Tft_DrawString(10, 18 + 1 * 24, buf);
   
   
