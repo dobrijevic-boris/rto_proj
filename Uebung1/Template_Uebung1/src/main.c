@@ -29,6 +29,8 @@
 #define TASK_SCHEDULER_WATCH    (uint32_t)1000  // task watch max time between calls
 #define TASK_SCHEDULER_POTI     (uint32_t)50    // task poti max time between calls
 
+// global static for psp
+static uint32_t taskStack[512];
 
 int main(void) {
     
@@ -39,6 +41,11 @@ int main(void) {
     Adc_Init(ADC_CHANNEL_POTENTIOMETER);	
     Tick_InitSysTick();
     Debug_Init();
+    
+    __set_PSP((uint32_t)(taskStack + 512));  // PSP zeigt ans Ende des Arrays
+    __set_CONTROL(0x02);                    // Bit 1 = 1 ? benutze PSP im Thread-Modus
+    __ISB();                                // Pipeline leeren
+
     
     BOOL mandelbrotFinished = FALSE;
     while (1) {
