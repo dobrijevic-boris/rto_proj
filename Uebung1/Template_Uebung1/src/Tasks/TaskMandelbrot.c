@@ -84,6 +84,6 @@ static BOOL MandelBrot (void)
 
 BOOL TaskMandelbrot (void)
 {
-	Tft_DrawString(10, 18+5*24, "ManBr ");
+	Tft_DrawString(10, 18+5*24, "MandelBrot ");
 	return MandelBrot();	
 }

@@ -53,7 +53,7 @@ int main(void) {
         uint32_t delta = now - lastTick;
         lastTick = now;
 
-        // Zeitaufsummierung
+        // Update time since last call
         lastCounter += delta;
         lastKey     += delta;
         lastPoti    += delta;
@@ -80,7 +80,7 @@ int main(void) {
         }
         else if (lastWatch >= TASK_SCHEDULER_WATCH) {
             Debug_SwitchDebugPin(DEBUG_PIN_TASKWATCH, Bit_SET);
-            TaskWatch();
+            TaskWatch(now);
             Debug_SwitchDebugPin(DEBUG_PIN_TASKWATCH, Bit_RESET);
             lastWatch = 0;
         }
@@ -91,7 +91,7 @@ int main(void) {
             lastLed = 0;
         }
         else {
-            // kein anderer Task fällig ? Mandelbrot
+            // if no other task executed: mandelbrot
             Debug_SwitchDebugPin(DEBUG_PIN_TASKMANDELBROT, Bit_SET);
             mandelbrotFinished = TaskMandelbrot();
             Debug_SwitchDebugPin(DEBUG_PIN_TASKMANDELBROT, Bit_RESET);
