@@ -29,12 +29,12 @@ static BOOL MandelBrot (void)
 	double Re_factor = (MaxRe-MinRe)/(ImageWidth-1);
 	double Im_factor = (MaxIm-MinIm)/(ImageHeight-1);
 	unsigned MaxIterations = 30;
-	
+    
 	// make static to not loose progress
 	static unsigned int x = 0;
 	static unsigned int y = 0;
 	
-
+    unsigned int pixelsDrawn = 0;  // allways reset on re-entrancy
 	for( ; y<ImageHeight; ++y)
 	{		
 		double c_im = MaxIm - y*Im_factor;
@@ -62,7 +62,8 @@ static BOOL MandelBrot (void)
 				Tft_DrawPixel(y, x + OFFSET);	
 			}
 			
-			if(x % X_LOOP_CNT == 0){		// cooperative yield
+			if(++pixelsDrawn >= X_LOOP_CNT){		// cooperative yield
+                ++x;
 				return FALSE;
 			}
 		}
@@ -73,7 +74,8 @@ static BOOL MandelBrot (void)
 	}
 	
 	if(y >= ImageHeight){	// reset outside of loop
-		y = 0;
+		x = 0;
+        y = 0;
 	}
     
     return TRUE;
