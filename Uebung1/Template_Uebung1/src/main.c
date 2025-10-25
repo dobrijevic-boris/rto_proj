@@ -15,7 +15,7 @@
 #include "BSP/systick.h"
 #include "stm32f0xx_gpio.h"
 #include "BSP/TftDisplay.h"
-#include "Fonts/TftFont_16x24.h"
+#include "Fonts/TftFont_6x8.h"
 #include "TaskAll.h"
 #include "BSP/Debug.h"
 
@@ -35,7 +35,7 @@ int main(void) {
     Key_Init();
     Led_Init();
     Tft_Init();
-    Tft_SetFont(&TftFont_16x24);
+    Tft_SetFont(&TftFont_6x8);
     Adc_Init(ADC_CHANNEL_POTENTIOMETER);	
     Tick_InitSysTick();
     Debug_Init();
