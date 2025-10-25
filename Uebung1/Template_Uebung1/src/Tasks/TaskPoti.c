@@ -10,11 +10,19 @@
 	
 
 #include "BSP/TftDisplay.h"
+#include "BSP/Adc.h"
 #include "StdDef.h"
 #include "TaskPoti.h"
+#include <stdio.h>
 
+#define TFT_BUF_SZ 20 // buffersize for tft message
 
 void TaskPoti (void)
 {
-	Tft_DrawString(10, 18+4*24, "Poti ");	
+    int32_t potiVal = Adc_GetValue(1000);
+    
+    // draw potentiometer value
+    char buf[TFT_BUF_SZ];
+    snprintf(buf, sizeof(buf), "Poti: %d mV", potiVal);
+	Tft_DrawString(10, 18+4*24, buf);	
 }
