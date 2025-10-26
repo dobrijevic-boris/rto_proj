@@ -23,11 +23,12 @@
 
 
 /* Private define ------------------------------------------------------------*/
-#define TASK_SCHEDULER_COUNTER  (uint32_t)20    // task counter max time between calls
-#define TASK_SCHEDULER_KEY      (uint32_t)50    // task key max time between calls
-#define TASK_SCHEDULER_LED      (uint32_t)100    // task led max time between calls
-#define TASK_SCHEDULER_WATCH    (uint32_t)1000  // task watch max time between calls
-#define TASK_SCHEDULER_POTI     (uint32_t)50    // task poti max time between calls
+#define TASK_SCHEDULER_COUNTER  (uint32_t)19    // task counter max time between calls
+#define TASK_SCHEDULER_KEY      (uint32_t)49    // task key max time between calls
+#define TASK_SCHEDULER_LED      (uint32_t)97    // task led max time between calls
+#define TASK_SCHEDULER_WATCH    (uint32_t)999   // task watch max time between calls
+#define TASK_SCHEDULER_POTI     (uint32_t)49    // task poti max time between calls
+#define MANDELBROT_OVERHEAD 4
 
 // global static for psp
 static uint32_t taskStack[512];
@@ -42,9 +43,9 @@ int main(void) {
     Tick_InitSysTick();
     Debug_Init();
     
-    __set_PSP((uint32_t)(taskStack + 512));  // PSP zeigt ans Ende des Arrays
-    __set_CONTROL(0x02);                    // Bit 1 = 1 ? benutze PSP im Thread-Modus
-    __ISB();                                // Pipeline leeren
+    __set_PSP((uint32_t)(taskStack + 512)); // set psp to size
+    __set_CONTROL(0x02);                    // switch to psp
+    __ISB();                                // clear pipeline
 
     
     BOOL mandelbrotFinished = FALSE;
@@ -97,7 +98,14 @@ int main(void) {
             Debug_SwitchDebugPin(DEBUG_PIN_TASKLED, Bit_RESET);
             lastLed = 0;
         }
-        else {
+        // determine if mandelbrot can run or if mandelbrot should wait until next timeslot
+        else if(    
+            (TASK_SCHEDULER_COUNTER - lastCounter) > MANDELBROT_OVERHEAD
+            &&(TASK_SCHEDULER_KEY - lastKey) > MANDELBROT_OVERHEAD 
+            &&(TASK_SCHEDULER_POTI - lastPoti) > MANDELBROT_OVERHEAD 
+            &&(TASK_SCHEDULER_WATCH - lastWatch) > MANDELBROT_OVERHEAD 
+            &&(TASK_SCHEDULER_LED - lastLed) > MANDELBROT_OVERHEAD 
+        ) {
             // if no other task executed: mandelbrot
             Debug_SwitchDebugPin(DEBUG_PIN_TASKMANDELBROT, Bit_SET);
             mandelbrotFinished = TaskMandelbrot();

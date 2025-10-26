@@ -17,7 +17,7 @@
 #define ImageHeight 150
 #define ImageWidth  150
 #define OFFSET		150
-#define X_LOOP_CNT  5
+#define X_LOOP_CNT  1
 
 
 static BOOL MandelBrot (void)
@@ -68,16 +68,12 @@ static BOOL MandelBrot (void)
 			}
 		}
 		
-		if(x >= ImageWidth){	// reset outside of loop
-			x = 0;
-		}
+        x = 0;
 	}
 	
-	if(y >= ImageHeight){	// reset outside of loop
-		x = 0;
-        y = 0;
-	}
-    
+    x = 0;
+    y = 0;
+
     return TRUE;
 }
 
