@@ -159,11 +159,12 @@ Debug_SwitchDebugPin(DEBUG_PIN_TASKCOUNTER, Bit_SET);
 Debug_SwitchDebugPin(DEBUG_PIN_TASKCOUNTER, Bit_RESET);
 \end{lstlisting}
 Der durch die Messung bestimmte Overhead beträgt 796ns, was ungefähr 38 Zyklen beträgt.
-Ein Zyklus entspricht 1/48MHz = 20.883ns
-Somit 796ns/20.883ns = 38.2 Cycles. \\
-
+Ein Zyklus entspricht 1/48MHz = 20.883ns.
+Somit 796ns/20.883ns = 38.2 Cycles.\\
 \includegraphics[width=\textwidth]{Images/overhead.png}
-
+\\
+\\
+Da kein Task unter einer ms dauert kann der Overhead der Messung vernachlässigt werden, da er unter einem Promille liegt.
 
 \section{Übungsaufgabe B}
 Alle Funktionen wurden wie verlangt umgesetzt:
@@ -179,13 +180,14 @@ Alle Funktionen wurden wie verlangt umgesetzt:
 \\
 \\
 Um die Tasks alle so reaktiv wie verlangt ausführen zu können wurde auf ko-operatives Scheduling gesetzt.
-Mithilfe des Systicks wird ein Zeitdelta berechnet, um festzustellen, wie lange die jeweiligen Tasks laufen.
+Mithilfe des Systicks wird ein Zeitdelta berechnet, um festzustellen, wie viel Zeit seit der letzten Ausführung der jeweiligen Tasks vergangen ist.
 Das Scheduling nutzt diese Zeitdeltas, um festzustellen, ob ein Task an der Reihe ist oder an andere Tasks freigeben sollte.
-\\
-\\
 Mithilfe von defines werden die Zeitschlitze definiert, in welchen ein Task vorkommen muss.
 Die Priorisierung erfolgt dabei durch eine If-else-if-Kette, wobei der TaskCounter() die höchste Prio erhält.
-
+\\
+\\
+\\
+\\
 \begin{lstlisting} 
 if (lastCounter >= TASK_SCHEDULER_COUNTER) {
     Debug_SwitchDebugPin(DEBUG_PIN_TASKCOUNTER, Bit_SET);
@@ -275,7 +277,7 @@ ISB agiert hier auch als Instruction Synchronisation Barrier.
 \includegraphics[width=\textwidth]{Images/isr.png}
 
 Zu Beginn läuft der STM32 immer auf dem Master-Stack, der Switch auf den Process-Stack muss immer Manuell erfolgen.
-Hier ist zu sehen wie alle inits im device default auf dem Master-Stack ausgefürt werden:
+Hier ist zu sehen wie alle inits im device default auf dem Master-Stack ausgefürt werden:\\
 \includegraphics[width=\textwidth]{Images/vor_psp.png}
 Mithilfe dieser Codezeilen wird ein Switch auf den PSP vor der Super-Loop durchgeführt:
 \begin{lstlisting}
@@ -284,15 +286,15 @@ __set_CONTROL(0x02);                    // switch to psp
 __ISB();                                // clear pipeline
 \end{lstlisting}
 
-Hier erkennt man die Initialisierung des PSP im Assembler code:
+Hier erkennt man die Initialisierung des PSP im Assembler code:\\
 \includegraphics[width=\textwidth]{Images/psp_init.png}
 
-Schließlich der Switch von MSP auf PSP durch einen Pipeline-Flush und dadurch das laden von Instruktionen vom PSP:
+Schließlich der Switch von MSP auf PSP durch einen Pipeline-Flush und dadurch das laden von Instruktionen vom PSP:\\
 \includegraphics[width=\textwidth]{Images/psp_switch.png}
 
 Somit läuft der Code der Superloop mit all ihren Tasks immer auf dem PSP. 
 Auf den MSP muss jedoch nicht gewechselt werden.
-Da die ISRs immer auf dem Master-Stack arbeiten erforlgen die Stack-Switches hier automatisch:
+Da die ISRs immer auf dem Master-Stack arbeiten erforlgen die Stack-Switches hier automatisch:\\
 \includegraphics[width=\textwidth]{Images/isr.png}
 
 %\clearpage
