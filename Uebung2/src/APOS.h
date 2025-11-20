@@ -9,6 +9,8 @@ static uint32_t taskAStack[APOS_TASK_STACK_SZ];
 static uint32_t taskBStack[APOS_TASK_STACK_SZ];
 static uint32_t taskCStack[APOS_TASK_STACK_SZ];
 
+
+
 typedef struct {
     char const* pTaskName;
     uint32_t Priority;
@@ -17,6 +19,14 @@ typedef struct {
     uint32_t StackSize;
     uint32_t TimeSlice;
 } APOS_TCB_STRUCT;
+
+
+extern APOS_TCB_STRUCT TCB_TaskA;
+extern APOS_TCB_STRUCT TCB_TaskB;
+extern APOS_TCB_STRUCT TCB_TaskC;
+
+
+
 
 
 void APOS_Init (void); // Initialisert das Echtzeitbetriebssystem

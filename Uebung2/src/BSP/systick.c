@@ -13,6 +13,7 @@
 #include "stm32f0xx.h"
 #include "systick.h"
 #include "Debug.h"
+#include "APOS.h"
 
 /* Private define ------------------------------------------------------------*/
 #define _1_sec			1000
@@ -29,6 +30,7 @@ static uint32_t msTicks;      		// Counts 1ms timeTicks
 void SysTick_Handler (void)  {
   Debug_SwitchDebugPin(DEBUG_PIN_SYSTICK, Bit_SET);
   msTicks++;                                    // increment Tick-counter
+  APOS_Scheduler();
   Debug_SwitchDebugPin(DEBUG_PIN_SYSTICK, Bit_RESET);
 }
 

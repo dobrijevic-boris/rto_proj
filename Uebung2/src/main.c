@@ -27,28 +27,60 @@
 
 /* Private define ------------------------------------------------------------*/
 #define TASK_STACK_SZ (uint32_t)1024
+#define TASK_PRIO (uint32_t)1
+#define TASK_TMSLC (uint32_t)10
 
 static uint32_t taskA_stack[TASK_STACK_SZ];
 static uint32_t taskB_stack[TASK_STACK_SZ];
 static uint32_t taskC_stack[TASK_STACK_SZ];
 
+const char* TaskA_name = "TaskA";
+const char* TaskB_name = "TaskB";
+const char* TaskC_name = "TaskC";
+
+static uint8_t state = 0;
+
+void PendSV_Handler(void) {
+    
+    if (state == 0) {
+        
+    __set_PSP((uint32_t)(TCB_TaskA.pStack));  // PSP zeigt ans Ende des Arrays
+    __set_CONTROL(0x02);                    // Bit 1 = 1 ? benutze PSP im Thread-Modus
+    __ISB();                                // Pipeline leeren
+    state = 1;
+    }
+    if (state == 1) {
+        
+    __set_PSP((uint32_t)(TCB_TaskB.pStack));  // PSP zeigt ans Ende des Arrays
+    __set_CONTROL(0x02);                    // Bit 1 = 1 ? benutze PSP im Thread-Modus
+    __ISB();        // Pipeline leeren
+    state = 0;
+    }
+}
 
 
 int main(void) {
     
-    __set_PSP((uint32_t)(taskA_stack + TASK_STACK_SZ));  // PSP zeigt ans Ende des Arrays
-    __set_CONTROL(0x02);                    // Bit 1 = 1 ? benutze PSP im Thread-Modus
-    __ISB();     
-    
+    void __disable_irq();
+    NVIC_SetPriority(PendSV_IRQn, 3); 
     
     Debug_Init();
     Tick_InitSysTick();
     
     APOS_Init();
     
+    
     FillTaskA();
     FillTaskB();
     FillTaskC();
+    
+    APOS_TASK_Create(&TCB_TaskA, TaskA_name, TASK_PRIO, &testTaskA, taskA_stack, TASK_STACK_SZ, TASK_TMSLC);
+    APOS_TASK_Create(&TCB_TaskB, TaskB_name, TASK_PRIO, &testTaskB, taskB_stack, TASK_STACK_SZ, TASK_TMSLC);
+    APOS_TASK_Create(&TCB_TaskC, TaskC_name, TASK_PRIO, &testTaskC, taskC_stack, TASK_STACK_SZ, TASK_TMSLC);
+   
+    APOS_Start();
+    
+    void __enable_irq(void);
     
     while(1) {
     }

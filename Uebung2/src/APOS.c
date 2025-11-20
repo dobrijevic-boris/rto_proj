@@ -1,5 +1,12 @@
 #include "APOS.h"
 
+#include "stm32f0xx.h"
+
+
+
+APOS_TCB_STRUCT TCB_TaskA;
+APOS_TCB_STRUCT TCB_TaskB;
+APOS_TCB_STRUCT TCB_TaskC;
 
 void APOS_Init (void) 
 {
@@ -17,7 +24,10 @@ void APOS_Init (void)
 }
 void APOS_Start (void) 
 {
-    
+    // switch to taskA
+    __set_PSP((uint32_t)TCB_TaskA.pStack + TCB_TaskA.StackSize);  // PSP zeigt ans Ende des Arrays
+    __set_CONTROL(0x02);                    // Bit 1 = 1 ? benutze PSP im Thread-Modus
+    __ISB();                                // Pipeline leeren
     
     
 }
@@ -41,4 +51,6 @@ void APOS_TASK_Create (
 
 void APOS_Scheduler(void) {
     
+    // activate PENDSV
+    SCB->ICSR = SCB->ICSR | (1<<28);
 }
