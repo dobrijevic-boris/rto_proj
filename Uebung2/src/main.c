@@ -18,6 +18,7 @@
 #include "Fonts/TftFont_6x8.h"
 #include "TaskAll.h"
 #include "BSP/Debug.h"
+#include "TestTask.h"
 
 #include "APOS.h"
 
@@ -25,15 +26,32 @@
 
 
 /* Private define ------------------------------------------------------------*/
+#define TASK_STACK_SZ (uint32_t)1024
 
-
+static uint32_t taskA_stack[TASK_STACK_SZ];
+static uint32_t taskB_stack[TASK_STACK_SZ];
+static uint32_t taskC_stack[TASK_STACK_SZ];
 
 
 
 int main(void) {
     
-        APOS_Init();
+    __set_PSP((uint32_t)(taskA_stack + TASK_STACK_SZ));  // PSP zeigt ans Ende des Arrays
+    __set_CONTROL(0x02);                    // Bit 1 = 1 ? benutze PSP im Thread-Modus
+    __ISB();     
     
+    
+    Debug_Init();
+    Tick_InitSysTick();
+    
+    APOS_Init();
+    
+    FillTaskA();
+    FillTaskB();
+    FillTaskC();
+    
+    while(1) {
+    }
 }
 
 

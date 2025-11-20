@@ -8,4 +8,8 @@ void testTaskC(void);
 
 
 
+void FillTaskA(void);
+void FillTaskB(void);
+void FillTaskC(void);
+
 #endif

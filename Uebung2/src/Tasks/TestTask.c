@@ -87,27 +87,27 @@ void FillTaskC(void)
 void testTaskA(void) {
    FillTaskA();
     while (1) {
-    Debug_TaskOn_A();
+    //Debug_TaskOn_A();
     // enter Code
-    Debug_TaskOff_A();
+    //Debug_TaskOff_A();
     APOS_Scheduler();
 } 
 }
 void testTaskB(void) {
     FillTaskB();
     while (1) {
-    Debug_TaskOn_B();
+    //Debug_TaskOn_B();
     // enter Code
-    Debug_TaskOff_B();
+    //Debug_TaskOff_B();
     APOS_Scheduler();
     }
 }
 void testTaskC(void) {
     FillTaskC();
     while (1) {
-    Debug_TaskOn_C();
+    //Debug_TaskOn_C();
     // enter Code
-    Debug_TaskOff_C();
+    //Debug_TaskOff_C();
     APOS_Scheduler();
     }
 }
