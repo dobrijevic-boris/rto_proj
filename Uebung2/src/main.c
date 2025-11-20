@@ -19,95 +19,21 @@
 #include "TaskAll.h"
 #include "BSP/Debug.h"
 
+#include "APOS.h"
+
 #include <stdio.h>
 
 
 /* Private define ------------------------------------------------------------*/
-#define TASK_SCHEDULER_COUNTER  (uint32_t)20    // task counter max time between calls
-#define TASK_SCHEDULER_KEY      (uint32_t)50    // task key max time between calls
-#define TASK_SCHEDULER_LED      (uint32_t)100    // task led max time between calls
-#define TASK_SCHEDULER_WATCH    (uint32_t)1000  // task watch max time between calls
-#define TASK_SCHEDULER_POTI     (uint32_t)50    // task poti max time between calls
 
-// global static for psp
-static uint32_t taskStack[512];
+
+
+
 
 int main(void) {
     
-    Key_Init();
-    Led_Init();
-    Tft_Init();
-    Tft_SetFont(&TftFont_6x8);
-    Adc_Init(ADC_CHANNEL_POTENTIOMETER);	
-    Tick_InitSysTick();
-    Debug_Init();
+        APOS_Init();
     
-    __set_PSP((uint32_t)(taskStack + 512));  // PSP zeigt ans Ende des Arrays
-    __set_CONTROL(0x02);                    // Bit 1 = 1 ? benutze PSP im Thread-Modus
-    __ISB();                                // Pipeline leeren
-
-    
-    BOOL mandelbrotFinished = FALSE;
-    while (1) {
-        static uint32_t lastCounter = 0;
-        static uint32_t lastKey = 0;
-        static uint32_t lastPoti = 0;
-        static uint32_t lastWatch = 0;
-        static uint32_t lastLed = 0;
-
-        static uint32_t lastTick = 0;
-        uint32_t now = SysTick_GetTicks();
-        uint32_t delta = now - lastTick;
-        lastTick = now;
-
-        // Update time since last call
-        lastCounter += delta;
-        lastKey     += delta;
-        lastPoti    += delta;
-        lastWatch   += delta;
-        lastLed     += delta;
-
-        if (lastCounter >= TASK_SCHEDULER_COUNTER) {
-            Debug_SwitchDebugPin(DEBUG_PIN_TASKCOUNTER, Bit_SET);
-            TaskCounter();
-            Debug_SwitchDebugPin(DEBUG_PIN_TASKCOUNTER, Bit_RESET);
-            lastCounter = 0;
-        }
-        else if (lastKey >= TASK_SCHEDULER_KEY) {
-            Debug_SwitchDebugPin(DEBUG_PIN_TASKKEY, Bit_SET);
-            TaskKey();
-            Debug_SwitchDebugPin(DEBUG_PIN_TASKKEY, Bit_RESET);
-            lastKey = 0;
-        }
-        else if (lastPoti >= TASK_SCHEDULER_POTI) {
-            Debug_SwitchDebugPin(DEBUG_PIN_TASKPOTI, Bit_SET);
-            TaskPoti();
-            Debug_SwitchDebugPin(DEBUG_PIN_TASKPOTI, Bit_RESET);
-            lastPoti = 0;
-        }
-        else if (lastWatch >= TASK_SCHEDULER_WATCH) {
-            Debug_SwitchDebugPin(DEBUG_PIN_TASKWATCH, Bit_SET);
-            TaskWatch(now);
-            Debug_SwitchDebugPin(DEBUG_PIN_TASKWATCH, Bit_RESET);
-            lastWatch = 0;
-        }
-        else if (lastLed >= TASK_SCHEDULER_LED) {
-            Debug_SwitchDebugPin(DEBUG_PIN_TASKLED, Bit_SET);
-            TaskLed();
-            Debug_SwitchDebugPin(DEBUG_PIN_TASKLED, Bit_RESET);
-            lastLed = 0;
-        }
-        else {
-            // if no other task executed: mandelbrot
-            Debug_SwitchDebugPin(DEBUG_PIN_TASKMANDELBROT, Bit_SET);
-            mandelbrotFinished = TaskMandelbrot();
-            Debug_SwitchDebugPin(DEBUG_PIN_TASKMANDELBROT, Bit_RESET);
-
-            if (mandelbrotFinished) {
-                Tft_ClearScreen();
-            }
-        }
-    }
 }
 
 

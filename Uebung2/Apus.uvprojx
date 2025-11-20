@@ -347,7 +347,7 @@
             <interw>1</interw>
             <Ropi>0</Ropi>
             <Rwpi>0</Rwpi>
-            <thumb>0</thumb>
+            <thumb>1</thumb>
             <SplitLS>0</SplitLS>
             <SwStkChk>0</SwStkChk>
             <NoWarn>0</NoWarn>
@@ -423,6 +423,16 @@
               <FileName>main.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\main.c</FilePath>
+            </File>
+            <File>
+              <FileName>APOS.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\APOS.c</FilePath>
+            </File>
+            <File>
+              <FileName>APOS.s</FileName>
+              <FileType>2</FileType>
+              <FilePath>.\src\APOS.s</FilePath>
             </File>
           </Files>
         </Group>
@@ -508,6 +518,11 @@
               <FileName>TaskWatch.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\Tasks\TaskWatch.c</FilePath>
+            </File>
+            <File>
+              <FileName>TestTask.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\Tasks\TestTask.c</FilePath>
             </File>
           </Files>
         </Group>

@@ -11,7 +11,11 @@
 #define DEBUG_PIN_TASKPOTI GPIO_Pin_14
 #define DEBUG_PIN_TASKMANDELBROT GPIO_Pin_15
 
+#define DEBUG_PIN_DEFAULT GPIO_Pin_0
 
+#define DEBUG_PIN_TASKA GPIO_Pin_1
+#define DEBUG_PIN_TASKB GPIO_Pin_3
+#define DEBUG_PIN_TASKC GPIO_Pin_0
 
 
 void Debug_Init(void);
