@@ -56,6 +56,9 @@ APOS_restore_regs
   ; load psp
   MSR PSP,  r0
   
+  ;EXC_Return to trigger new pc
+  LDR r0, =0xFFFFFFFD ;load EXC_RETURN into r0 (Thumb-1 doesnt support direct ldr LR)
+  MOV lr, r0          ;lr = EXC_RETURN
   BX  lr
     
-END
+  END

@@ -4,6 +4,14 @@
 
 APOS_TCB_STRUCT TCB_Tasks[APOS_TASK_NR];
 
+
+// function prototypes
+void APOS_Scheduler(void);
+
+
+
+
+
 void APOS_Init (void) 
 {
     for(uint32_t i=0;i<APOS_TASK_STACK_SZ;i++) {
@@ -24,7 +32,11 @@ void APOS_Start (void)
     __set_PSP((uint32_t)TCB_Tasks[TASK_A].pStack);  // PSP zeigt ans Ende des Arrays
     __set_CONTROL(0x02);                    // Bit 1 = 1 ? benutze PSP im Thread-Modus
     __ISB();                                // Pipeline leeren
-    
+    __asm volatile (
+        "ldr  r0, =0xFFFFFFFD \n"   // EXC_RETURN: thread mode, use PSP
+        "mov  lr, r0          \n"
+        "bx   lr              \n"   // pops HW frame from PSP, jumps to Task A
+    );
 }
 void APOS_TASK_Create ( 
     APOS_TCB_STRUCT* pTask, // TaskControlBlock
@@ -38,20 +50,31 @@ void APOS_TASK_Create (
     pTask->pTaskName = pTaskName;
     pTask->Priority = Priority;
     pTask->pRoutine = pRoutine;
-    pTask->pStack = pStack;
     pTask->StackSize = StackSize;
     pTask->TimeSlice = TimeSlice;
     
     // Init stack
-    uint32_t idx = 8;
-    ((uint32_t*)pStack)[idx--] = 0x01000000;
-    ((uint32_t*)pStack)[idx--] = (uint32_t)pRoutine;
-    // r4 - r11
-    for(uint32_t i=idx;i>0; i--) {
-      ((uint32_t*)pStack)[i] = 0xABCD; // init with arbitrary values
-    }
-   
-    
+    pStack += APOS_TASK_STACK_SZ;
+    uint32_t* sp = (uint32_t*)pStack;
+    *(--sp) = 0x01000000;
+    *(--sp) = (uint32_t)pRoutine;
+    *(--sp) = 0xFFFFFFFD; // lr (value doesnt mather)
+    *(--sp) = 0xCCCCCCCC; // r12
+    *(--sp) = 0x33333333; // r3
+    *(--sp) = 0x22222222; // r2
+    *(--sp) = 0x11111111; // r1
+    *(--sp) = 0x00000000; // r0
+/*    
+    *(--sp) = 0xBBBBBBBB; // r11
+    *(--sp) = 0xAAAAAAAA; // r10
+    *(--sp) = 0x99999999; // r9
+    *(--sp) = 0x88888888; // r8
+    *(--sp) = 0x77777777; // r7
+    *(--sp) = 0x66666666; // r6
+    *(--sp) = 0x55555555; // r5
+    *(--sp) = 0x44444444; // r4
+  */  
+    pTask->pStack = sp;
 }
 
 void APOS_Scheduler(void) {

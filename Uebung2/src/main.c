@@ -62,7 +62,7 @@ void PendSV_Handler(void) {
             state = TASK_A;
             break;
     }
-    // restore reg (in asm)
+    // restore reg (in asm) 
     APOS_restore_regs(TCB_Tasks[state].pStack);
 }
 
@@ -77,9 +77,9 @@ int main(void) {
     
     APOS_Init();
     
-    APOS_TASK_Create(&TCB_Tasks[TASK_A], TaskA_name, TASK_PRIO, &testTaskA, taskA_stack, TASK_STACK_SZ, TASK_TMSLC);
-    APOS_TASK_Create(&TCB_Tasks[TASK_B], TaskB_name, TASK_PRIO, &testTaskB, taskB_stack, TASK_STACK_SZ, TASK_TMSLC);
-    APOS_TASK_Create(&TCB_Tasks[TASK_C], TaskC_name, TASK_PRIO, &testTaskC, taskC_stack, TASK_STACK_SZ, TASK_TMSLC);
+    APOS_TASK_Create(&TCB_Tasks[TASK_A], TaskA_name, TASK_PRIO, testTaskA, taskA_stack, TASK_STACK_SZ, TASK_TMSLC);
+    APOS_TASK_Create(&TCB_Tasks[TASK_B], TaskB_name, TASK_PRIO, testTaskB, taskB_stack, TASK_STACK_SZ, TASK_TMSLC);
+    APOS_TASK_Create(&TCB_Tasks[TASK_C], TaskC_name, TASK_PRIO, testTaskC, taskC_stack, TASK_STACK_SZ, TASK_TMSLC);
    
     void __enable_irq(void);
     
