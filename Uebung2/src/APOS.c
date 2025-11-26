@@ -25,7 +25,6 @@ void APOS_Start (void)
     __set_CONTROL(0x02);                    // Bit 1 = 1 ? benutze PSP im Thread-Modus
     __ISB();                                // Pipeline leeren
     
-    
 }
 void APOS_TASK_Create ( 
     APOS_TCB_STRUCT* pTask, // TaskControlBlock

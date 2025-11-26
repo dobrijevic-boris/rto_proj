@@ -30,7 +30,7 @@ static uint32_t msTicks;      		// Counts 1ms timeTicks
 void SysTick_Handler (void)  {
   Debug_SwitchDebugPin(DEBUG_PIN_SYSTICK, Bit_SET);
   msTicks++;                                    // increment Tick-counter
-  APOS_Scheduler();
+  //APOS_Scheduler();
   Debug_SwitchDebugPin(DEBUG_PIN_SYSTICK, Bit_RESET);
 }
 

@@ -31,7 +31,7 @@ typedef struct {
 extern APOS_TCB_STRUCT TCB_Tasks[];
 
 // asm functions
-extern void APOS_save_regs(uint32_t *pStack);
+extern uint32_t* APOS_save_regs(uint32_t *pStack);
 extern void APOS_restore_regs(uint32_t *pStack);
 
 

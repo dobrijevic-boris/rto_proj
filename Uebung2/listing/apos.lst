@@ -12,38 +12,67 @@ ARM Macro Assembler    Page 1
     6 00000000         
     7 00000000         APOS_save_regs
     8 00000000         ; r0: sp
-    9 00000000         
-   10 00000000         
-   11 00000000         APOS_restore_regs
-   12 00000000         ; r0: sp
-   13 00000000         
-   14 00000000         ; restore r0-r7
-   15 00000000 6804            LDR              r4,   [r0, #0]
-   16 00000002 6845            LDR              r5,   [r0, #4]
-   17 00000004 6886            LDR              r6,   [r0, #8]
-   18 00000006 68C7            LDR              r7,   [r0, #12]
-   19 00000008         ; restore r8-r11 (need to move to low reg first as direc
+    9 00000000         ; move sp by 8*4 bytes (r4-r11)
+   10 00000000 3820            SUBS             r0, r0, #32
+   11 00000002         
+   12 00000002 6004            STR              r4, [r0, #0]
+   13 00000004 6045            STR              r5, [r0, #4]
+   14 00000006 6086            STR              r6, [r0, #8]
+   15 00000008 60C7            STR              r7, [r0, #12]
+   16 0000000A         
+   17 0000000A         ; save r8-r11 (need to move to low reg first as direct L
+                       DR not supported)
+   18 0000000A 4642            MOV              r2,   r8
+   19 0000000C 6102            STR              r2,   [r0, #16]
+   20 0000000E         
+   21 0000000E 464A            MOV              r2,   r9
+   22 00000010 6142            STR              r2,   [r0, #20]
+   23 00000012         
+   24 00000012 4652            MOV              r2,   r10
+   25 00000014 6182            STR              r2,   [r0, #24]
+   26 00000016         
+   27 00000016 465A            MOV              r2,   r11
+   28 00000018 61C2            STR              r2,   [r0, #28]
+   29 0000001A         ; return value = new sp
+   30 0000001A         
+   31 0000001A 4770            BX               lr
+   32 0000001C         
+   33 0000001C         APOS_restore_regs
+   34 0000001C         ; r0: sp
+   35 0000001C         
+   36 0000001C         ; restore r0-r7
+   37 0000001C 6804            LDR              r4,   [r0, #0]
+   38 0000001E 6845            LDR              r5,   [r0, #4]
+   39 00000020 6886            LDR              r6,   [r0, #8]
+   40 00000022 68C7            LDR              r7,   [r0, #12]
+   41 00000024         ; restore r8-r11 (need to move to low reg first as direc
                        t LDR not supported)
-   20 00000008 4642            MOV              r2,   r8
-   21 0000000A 6102            STR              r2,   [r0, #16]
-   22 0000000C         
-   23 0000000C 464A            MOV              r2,   r9
-   24 0000000E 6142            STR              r2,   [r0, #20]
-   25 00000010         
-   26 00000010 4652            MOV              r2,   r10
-   27 00000012 6182            STR              r2,   [r0, #24]
-   28 00000014         
-   29 00000014 465A            MOV              r2,   r11
-   30 00000016 61C2            STR              r2,   [r0, #28]
-   31 00000018         
-   32 00000018         ; add r4-r11 to sp
-   33 00000018 3020            ADDS             r0, r0, #32
-   34 0000001A         ; load psp
-   35 0000001A F380 8809       MSR              PSP,  r0
-   36 0000001E         
-   37 0000001E 4770            BX               lr
-   38 00000020         
-   39 00000020         END
+   42 00000024 6902            LDR              r2, [r0, #16]
+   43 00000026 4690            MOV              r8, r2
+   44 00000028         
+   45 00000028 6942            LDR              r2, [r0, #20]
+   46 0000002A 4691            MOV              r9, r2
+   47 0000002C         
+   48 0000002C 6982            LDR              r2, [r0, #24]
+   49 0000002E 4692            MOV              r10, r2
+   50 00000030         
+   51 00000030 69C2            LDR              r2, [r0, #28]
+   52 00000032 4693            MOV              r11, r2
+   53 00000034         
+   54 00000034         ; add r4-r11 to sp
+   55 00000034 3020            ADDS             r0, r0, #32
+   56 00000036         ; load psp
+   57 00000036 F380 8809       MSR              PSP,  r0
+
+
+
+ARM Macro Assembler    Page 2 
+
+
+   58 0000003A         
+   59 0000003A 4770            BX               lr
+   60 0000003C         
+   61 0000003C         END
                        
 Command Line: --debug --xref --diag_suppress=9931,A1950W --cpu=Cortex-M0 --depe
 nd=.\output\apos_1.d -o.\output\apos_1.o -IC:\Users\bayer\AppData\Local\Arm\Pac
@@ -65,11 +94,11 @@ Symbol: APOS_CODE
    Uses
       None
 Comment: APOS_CODE unused
-APOS_restore_regs 00000000
+APOS_restore_regs 0000001C
 
 Symbol: APOS_restore_regs
    Definitions
-      At line 11 in file src\APOS.s
+      At line 33 in file src\APOS.s
    Uses
       At line 4 in file src\APOS.s
 Comment: APOS_restore_regs used once
@@ -81,11 +110,11 @@ Symbol: APOS_save_regs
    Uses
       At line 3 in file src\APOS.s
 Comment: APOS_save_regs used once
-END 00000020
+END 0000003C
 
 Symbol: END
    Definitions
-      At line 39 in file src\APOS.s
+      At line 61 in file src\APOS.s
    Uses
       None
 Comment: END unused
