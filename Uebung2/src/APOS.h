@@ -4,11 +4,18 @@
 #include <stdint.h>
 
 #define APOS_TASK_STACK_SZ (uint32_t)512
+#define APOS_TASK_NR       (uint32_t)3
 // global static for psp
 static uint32_t taskAStack[APOS_TASK_STACK_SZ];
 static uint32_t taskBStack[APOS_TASK_STACK_SZ];
 static uint32_t taskCStack[APOS_TASK_STACK_SZ];
 
+// enum for tasks
+typedef enum {
+    TASK_A = 0,
+    TASK_B,
+    TASK_C
+} TTASKS;
 
 
 typedef struct {
@@ -21,9 +28,7 @@ typedef struct {
 } APOS_TCB_STRUCT;
 
 
-extern APOS_TCB_STRUCT TCB_TaskA;
-extern APOS_TCB_STRUCT TCB_TaskB;
-extern APOS_TCB_STRUCT TCB_TaskC;
+extern APOS_TCB_STRUCT TCB_Tasks[];
 
 
 
