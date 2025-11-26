@@ -4,11 +4,90 @@
 ARM Macro Assembler    Page 1 
 
 
-    1 00000000                 end
+    1 00000000                 AREA             APOS_CODE, CODE, READONLY
+    2 00000000                 THUMB
+    3 00000000                 EXPORT           APOS_save_regs
+    4 00000000                 EXPORT           APOS_restore_regs
+    5 00000000         
+    6 00000000         
+    7 00000000         APOS_save_regs
+    8 00000000         ; r0: sp
+    9 00000000         
+   10 00000000         
+   11 00000000         APOS_restore_regs
+   12 00000000         ; r0: sp
+   13 00000000         
+   14 00000000         ; restore r0-r7
+   15 00000000 6804            LDR              r4,   [r0, #0]
+   16 00000002 6845            LDR              r5,   [r0, #4]
+   17 00000004 6886            LDR              r6,   [r0, #8]
+   18 00000006 68C7            LDR              r7,   [r0, #12]
+   19 00000008         ; restore r8-r11 (need to move to low reg first as direc
+                       t LDR not supported)
+   20 00000008 4642            MOV              r2,   r8
+   21 0000000A 6102            STR              r2,   [r0, #16]
+   22 0000000C         
+   23 0000000C 464A            MOV              r2,   r9
+   24 0000000E 6142            STR              r2,   [r0, #20]
+   25 00000010         
+   26 00000010 4652            MOV              r2,   r10
+   27 00000012 6182            STR              r2,   [r0, #24]
+   28 00000014         
+   29 00000014 465A            MOV              r2,   r11
+   30 00000016 61C2            STR              r2,   [r0, #28]
+   31 00000018         
+   32 00000018         ; add r4-r11 to sp
+   33 00000018 3020            ADDS             r0, r0, #32
+   34 0000001A         ; load psp
+   35 0000001A F380 8809       MSR              PSP,  r0
+   36 0000001E         
+   37 0000001E 4770            BX               lr
+   38 00000020         
+   39 00000020         END
+                       
 Command Line: --debug --xref --diag_suppress=9931,A1950W --cpu=Cortex-M0 --depe
 nd=.\output\apos_1.d -o.\output\apos_1.o -IC:\Users\bayer\AppData\Local\Arm\Pac
 ks\Keil\STM32F0xx_DFP\2.1.1\Drivers\CMSIS\Device\ST\STM32F0xx\Include --predefi
 ne="__EVAL SETA 1" --predefine="__MICROLIB SETA 1" --predefine="__UVISION_VERSI
 ON SETA 538" --predefine="STM32F072xB SETA 1" --list=.\listing\apos.lst src\APO
 S.s
-334 symbols in table
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Relocatable symbols
+
+APOS_CODE 00000000
+
+Symbol: APOS_CODE
+   Definitions
+      At line 1 in file src\APOS.s
+   Uses
+      None
+Comment: APOS_CODE unused
+APOS_restore_regs 00000000
+
+Symbol: APOS_restore_regs
+   Definitions
+      At line 11 in file src\APOS.s
+   Uses
+      At line 4 in file src\APOS.s
+Comment: APOS_restore_regs used once
+APOS_save_regs 00000000
+
+Symbol: APOS_save_regs
+   Definitions
+      At line 7 in file src\APOS.s
+   Uses
+      At line 3 in file src\APOS.s
+Comment: APOS_save_regs used once
+END 00000020
+
+Symbol: END
+   Definitions
+      At line 39 in file src\APOS.s
+   Uses
+      None
+Comment: END unused
+4 symbols
+338 symbols in table

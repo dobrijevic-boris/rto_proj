@@ -45,6 +45,7 @@ void PendSV_Handler(void) {
     // in assembler
 
     // save registers ( in asm)
+    APOS_save_regs(TCB_Tasks[state].pStack);
     // schedule ( in c)
     switch(state)
     {
