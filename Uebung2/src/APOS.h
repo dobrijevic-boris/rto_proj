@@ -13,7 +13,7 @@ typedef enum {
     //TASK_MANDELBROT,
     TASK_POTI,
     TASK_WATCH,
-    //TASK_NOP,
+    TASK_NOP,
     APOS_TASK_NR
 } APOS_TASK_ID;
 

@@ -20,15 +20,17 @@
 
 void TaskPoti (void)
 {
-    APOS_EnterCriticalRegion();
-    int32_t potiVal = Adc_GetValue(1000);
-    
-    // draw potentiometer value
-    char buf[TFT_BUF_SZ];
-    snprintf(buf, sizeof(buf), "Poti: %d mV", potiVal);
-	Tft_DrawString(10, 18+4*24, buf);
-    
-    APOS_ExitCriticalRegion();
-    APOS_TaskDelay(100);
-
+    while(1) {
+        
+        APOS_EnterCriticalRegion();
+        int32_t potiVal = Adc_GetValue(1000);
+        
+        // draw potentiometer value
+        char buf[TFT_BUF_SZ];
+        snprintf(buf, sizeof(buf), "Poti: %d mV", potiVal);
+        Tft_DrawString(10, 18+4*24, buf);
+        
+        APOS_ExitCriticalRegion();
+        APOS_TaskDelay(100);
+    }
 }

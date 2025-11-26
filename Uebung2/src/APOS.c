@@ -80,14 +80,14 @@ uint32_t* APOS_Select_next_task(uint32_t *sp) {
     uint8_t found = 0;
     do {
         // check if any task ready, if not run nop task
-        currentTask = (currentTask + 1) % APOS_TASK_NR;//% TASK_NOP;
+        currentTask = (currentTask + 1) % TASK_NOP;
         if(TCB_Tasks[currentTask].state == APOS_TASK_READY) {
             found = 1;
             break;
         }
     } while (currentTask != tempTask);
     if(!found) {
-        currentTask = TASK_COUNTER; //TASK_NOP;
+        currentTask = TASK_NOP;
     }
     
     // Mark new task as RUNNING
