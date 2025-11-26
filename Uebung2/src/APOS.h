@@ -35,7 +35,8 @@ extern void APOS_set_ctrl_pc(uint32_t pc);
 
 void APOS_Init (void); // Initialisert das Echtzeitbetriebssystem
 void APOS_Start (void); // Starten des Echtzeitbetriebssystems
-uint32_t* APOS_Scheduler(uint32_t *sp);
+void APOS_Scheduler(void); // Call SVC
+uint32_t* APOS_Select_next_task(uint32_t *sp); // select the next task to run
 
 void APOS_TASK_Create ( 
     APOS_TCB_STRUCT* pTask, // TaskControlBlock

@@ -9,7 +9,7 @@ ARM Macro Assembler    Page 1
     3 00000000                 EXPORT           APOS_save_regs
     4 00000000                 EXPORT           APOS_restore_regs
     5 00000000                 EXPORT           PendSV_Handler
-    6 00000000                 IMPORT           APOS_Scheduler
+    6 00000000                 IMPORT           APOS_Select_next_task
     7 00000000         
     8 00000000                 EXPORT           APOS_set_ctrl_pc
     9 00000000         
@@ -25,9 +25,10 @@ ARM Macro Assembler    Page 1
                                                             (thread context)
    18 0000000C F7FF FFFE       BL               APOS_save_regs ; r0 = PSP after
                                                              saving r4–r11
-   19 00000010 F7FF FFFE       BL               APOS_Scheduler ; r0 = PSP of ne
-                                                            xt task (from TCB_T
-                                                            asks[state])
+   19 00000010 F7FF FFFE       BL               APOS_Select_next_task ; r0 = PS
+                                                            P of next task (fro
+                                                            m TCB_Tasks[state])
+                                                            
    20 00000014 F7FF FFFE       BL               APOS_restore_regs ; restore r4–
                                                             r11 and MSR PSP
    21 00000018         ;EXC_Return to trigger new pc
@@ -62,13 +63,13 @@ ARM Macro Assembler    Page 1
    48 00000036 61C2            STR              r2,   [r0, #28]
    49 00000038         ; return value = new sp
    50 00000038         
-   51 00000038 4770            BX               lr
 
 
 
 ARM Macro Assembler    Page 2 
 
 
+   51 00000038 4770            BX               lr
    52 0000003A         
    53 0000003A         APOS_restore_regs
    54 0000003A         ; r0: sp
@@ -162,13 +163,13 @@ Comment: PendSV_Handler used once
 ARM Macro Assembler    Page 1 Alphabetic symbol ordering
 External symbols
 
-APOS_Scheduler 00000000
+APOS_Select_next_task 00000000
 
-Symbol: APOS_Scheduler
+Symbol: APOS_Select_next_task
    Definitions
       At line 6 in file src\APOS.s
    Uses
       At line 19 in file src\APOS.s
-Comment: APOS_Scheduler used once
+Comment: APOS_Select_next_task used once
 1 symbol
 342 symbols in table

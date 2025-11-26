@@ -7,7 +7,7 @@ APOS_TCB_STRUCT TCB_Tasks[APOS_TASK_NR];
 static uint8_t state = TASK_A;
 
 // function prototypes
-uint32_t* APOS_Scheduler(uint32_t *sp);
+uint32_t* APOS_Select_next_task(uint32_t *sp);
 
 
 void APOS_Init (void) 
@@ -62,7 +62,7 @@ void APOS_TASK_Create (
     pTask->pStack = sp;
 }
 
-uint32_t* APOS_Scheduler(uint32_t *sp) {
+uint32_t* APOS_Select_next_task(uint32_t *sp) {
     TCB_Tasks[state].pStack = sp; // update sp after saving regs
     switch(state)
     {
@@ -82,4 +82,13 @@ uint32_t* APOS_Scheduler(uint32_t *sp) {
     uint32_t* old_pStack = (uint32_t*)TCB_Tasks[state].pStack; // save old pStack for register load
     TCB_Tasks[state].pStack = (uint32_t*)TCB_Tasks[state].pStack + 8; // r4-r11
     return old_pStack; // return sp from new task
+}
+
+
+void APOS_Scheduler(void) {
+    __asm volatile ("SVC 0");
+}
+
+void SVC_Handler(void) {
+    SCB->ICSR = SCB->ICSR | (1<<28);
 }
