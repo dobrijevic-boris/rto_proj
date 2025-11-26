@@ -4,7 +4,7 @@
 
 APOS_TCB_STRUCT TCB_Tasks[APOS_TASK_NR];
 
-static uint8_t state = TASK_A;
+static uint8_t currentTask = TASK_A;
 
 // function prototypes
 uint32_t* APOS_Select_next_task(uint32_t *sp);
@@ -31,13 +31,19 @@ void APOS_TASK_Create (
     void (*pRoutine)(void), // Startadresse Task (ROM)
     void * pStack,          // Startadresse Stack des Tasks (RAM)
     uint32_t StackSize,     // Größe des Stacks
-    uint32_t TimeSlice)     // Time-Slice für Round Robin Scheduling  
+    uint32_t TimeSlice,     // Time-Slice für Round Robin Scheduling  
+    APOS_TASK_STATE state,  // task state (Ready, running, ...
+    uint32_t delay)         // time delay in ticks (1ms)
+    
+    
 {
     pTask->pTaskName = pTaskName;
     pTask->Priority = Priority;
     pTask->pRoutine = pRoutine;
     pTask->StackSize = StackSize;
     pTask->TimeSlice = TimeSlice;
+    pTask->state = APOS_TASK_READY;
+    pTask->delay = 0;
     
     // Init stack
     uint32_t* sp = (uint32_t*)pStack;
@@ -63,24 +69,20 @@ void APOS_TASK_Create (
 }
 
 uint32_t* APOS_Select_next_task(uint32_t *sp) {
-    TCB_Tasks[state].pStack = sp; // update sp after saving regs
-    switch(state)
-    {
-        case TASK_A:
-            state = TASK_B;
-            break;
-        case TASK_B:
-            state = TASK_C;
-            break;
-        case TASK_C:
-            state = TASK_A;
-            break;
-        default:
-            state = TASK_A;
-            break;
-    }
-    uint32_t* old_pStack = (uint32_t*)TCB_Tasks[state].pStack; // save old pStack for register load
-    TCB_Tasks[state].pStack = (uint32_t*)TCB_Tasks[state].pStack + 8; // r4-r11
+    TCB_Tasks[currentTask].pStack = sp; // update sp after saving regs
+    
+    // set running task to ready
+    if (TCB_Tasks[currentTask].state == APOS_TASK_RUNNING)
+        TCB_Tasks[currentTask].state = APOS_TASK_READY;
+    do {
+        currentTask = (currentTask + 1) % APOS_TASK_NR;
+    } while (TCB_Tasks[currentTask].state != APOS_TASK_READY);
+    
+    // Mark new task as RUNNING
+    TCB_Tasks[currentTask].state = APOS_TASK_RUNNING;
+    
+    uint32_t* old_pStack = (uint32_t*)TCB_Tasks[currentTask].pStack; // save old pStack for register load
+    TCB_Tasks[currentTask].pStack = (uint32_t*)TCB_Tasks[currentTask].pStack + 8; // r4-r11
     return old_pStack; // return sp from new task
 }
 
@@ -91,4 +93,10 @@ void APOS_Scheduler(void) {
 
 void SVC_Handler(void) {
     SCB->ICSR = SCB->ICSR | (1<<28);
+}
+
+void APOS_TaskDelay(uint32_t ticks) {
+    TCB_Tasks[currentTask].delay = ticks;
+    TCB_Tasks[currentTask].state = APOS_TASK_BLOCKED;
+    APOS_Scheduler();
 }

@@ -30,7 +30,20 @@ static uint32_t msTicks;      		// Counts 1ms timeTicks
 void SysTick_Handler (void)  {
   Debug_SwitchDebugPin(DEBUG_PIN_SYSTICK, Bit_SET);
   msTicks++;                                    // increment Tick-counter
-  //APOS_Scheduler();
+ 
+  // update delay of blocked tasks -> set ready when delay 0
+  for(uint8_t i=0; i < APOS_TASK_NR; i++) {
+    if(TCB_Tasks[i].state == APOS_TASK_BLOCKED && TCB_Tasks[i].delay > 0) {
+        TCB_Tasks[i].delay--; // if blocked, decrease delay
+    }
+    // set task ready
+    if(TCB_Tasks[i].delay == 0) {
+        TCB_Tasks[i].state = APOS_TASK_READY;
+    }
+  }
+  // set PendSV
+  SCB->ICSR = SCB->ICSR | (1<<28);
+    
   Debug_SwitchDebugPin(DEBUG_PIN_SYSTICK, Bit_RESET);
 }
 

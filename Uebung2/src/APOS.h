@@ -2,7 +2,7 @@
 #define APOS_H
 
 #include <stdint.h>
-#define APOS_TASK_STACK_SZ (uint32_t)32
+#define APOS_TASK_STACK_SZ (uint32_t)128
 #define APOS_TASK_NR       (uint32_t)3
 
 
@@ -11,8 +11,14 @@ typedef enum {
     TASK_A = 0,
     TASK_B,
     TASK_C
-} TTASKS;
+} APOS_TASK_ID;
 
+typedef enum {
+    APOS_TASK_READY=0,
+    APOS_TASK_RUNNING,
+    APOS_TASK_BLOCKED,
+    APOS_TASK_SUSPENDED
+} APOS_TASK_STATE;
 
 typedef struct {
     char const* pTaskName;
@@ -21,6 +27,8 @@ typedef struct {
     void * pStack;
     uint32_t StackSize;
     uint32_t TimeSlice;
+    APOS_TASK_STATE state;
+    uint32_t delay; // in ticks (1ms)
 } APOS_TCB_STRUCT;
 
 
@@ -45,7 +53,10 @@ void APOS_TASK_Create (
     void (*pRoutine)(void), // Startadresse Task (ROM)
     void * pStack, // Startadresse Stack des Tasks (RAM)
     uint32_t StackSize, // Größe des Stacks
-    uint32_t TimeSlice // Time-Slice für Round Robin Scheduling
+    uint32_t TimeSlice, // Time-Slice für Round Robin Scheduling
+    APOS_TASK_STATE state,
+    uint32_t delay
+    
 );
 
 

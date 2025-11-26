@@ -58,9 +58,9 @@ int main(void) {
     
     APOS_Init();
     initStack();
-    APOS_TASK_Create(&TCB_Tasks[TASK_A], "TaskA", TASK_PRIO, testTaskA, taskA_stack, APOS_TASK_STACK_SZ, TASK_TMSLC);
-    APOS_TASK_Create(&TCB_Tasks[TASK_B], "TaskB", TASK_PRIO, testTaskB, taskB_stack, APOS_TASK_STACK_SZ, TASK_TMSLC);
-    APOS_TASK_Create(&TCB_Tasks[TASK_C], "TaskC", TASK_PRIO, testTaskC, taskC_stack, APOS_TASK_STACK_SZ, TASK_TMSLC);
+    APOS_TASK_Create(&TCB_Tasks[TASK_A], "TaskA", TASK_PRIO, testTaskA, taskA_stack, APOS_TASK_STACK_SZ, TASK_TMSLC, APOS_TASK_READY, 0);
+    APOS_TASK_Create(&TCB_Tasks[TASK_B], "TaskB", TASK_PRIO, testTaskB, taskB_stack, APOS_TASK_STACK_SZ, TASK_TMSLC, APOS_TASK_READY, 0);
+    APOS_TASK_Create(&TCB_Tasks[TASK_C], "TaskC", TASK_PRIO, testTaskC, taskC_stack, APOS_TASK_STACK_SZ, TASK_TMSLC, APOS_TASK_READY, 0);
    
     void __enable_irq(void);
     
