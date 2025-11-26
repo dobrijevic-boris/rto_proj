@@ -11,7 +11,7 @@
 #include "StdDef.h"
 #include "TaskLed.h"
 #include "BSP/Led.h"
-
+#include "Apos.h"
 // Define LED task states
 typedef enum {
     LED_STATE_START,
@@ -22,37 +22,41 @@ typedef enum {
 
 void TaskLed (void)
 {
- 
-    static LED_STATE_t state = LED_STATE_START;
+    while(1) {
+        APOS_EnterCriticalRegion();
+        static LED_STATE_t state = LED_STATE_START;
 
-    // Simple state machine
-    switch (state)
-    {
-        case LED_STATE_LED3_ON:
-            Led_TurnOn(LEDType_LED3);
-            Led_TurnOff(LEDType_LED4);
-            Led_TurnOff(LEDType_LED5);
-            state = LED_STATE_LED4_ON;
-            break;
+        // Simple state machine
+        switch (state)
+        {
+            case LED_STATE_LED3_ON:
+                Led_TurnOn(LEDType_LED3);
+                Led_TurnOff(LEDType_LED4);
+                Led_TurnOff(LEDType_LED5);
+                state = LED_STATE_LED4_ON;
+                break;
 
-        case LED_STATE_LED4_ON:
-            Led_TurnOff(LEDType_LED3);
-            Led_TurnOn(LEDType_LED4);
-            state = LED_STATE_LED5_ON;
-            break;
+            case LED_STATE_LED4_ON:
+                Led_TurnOff(LEDType_LED3);
+                Led_TurnOn(LEDType_LED4);
+                state = LED_STATE_LED5_ON;
+                break;
 
-        case LED_STATE_LED5_ON:
-            Led_TurnOff(LEDType_LED4);
-            Led_TurnOn(LEDType_LED5);
-            state = LED_STATE_LED3_ON;
-            break;
-        case LED_STATE_START: // fall through to default
-        default:
-            Led_TurnOff(LEDType_LED3);
-            Led_TurnOff(LEDType_LED4);
-            Led_TurnOff(LEDType_LED5);
-            state = LED_STATE_LED3_ON;
-            break;
+            case LED_STATE_LED5_ON:
+                Led_TurnOff(LEDType_LED4);
+                Led_TurnOn(LEDType_LED5);
+                state = LED_STATE_LED3_ON;
+                break;
+            case LED_STATE_START: // fall through to default
+            default:
+                Led_TurnOff(LEDType_LED3);
+                Led_TurnOff(LEDType_LED4);
+                Led_TurnOff(LEDType_LED5);
+                state = LED_STATE_LED3_ON;
+                break;
+        }
+        APOS_ExitCriticalRegion();
+        APOS_TaskDelay(100);
     }
 }
 

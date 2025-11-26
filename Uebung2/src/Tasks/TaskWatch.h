@@ -3,6 +3,6 @@
 
 #include "StdDef.h"
 
-void TaskWatch (const uint32_t sysTick);
+void TaskWatch (void);
 
 #endif

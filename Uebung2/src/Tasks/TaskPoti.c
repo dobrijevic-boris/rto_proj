@@ -14,15 +14,21 @@
 #include "StdDef.h"
 #include "TaskPoti.h"
 #include <stdio.h>
+#include "APOS.h"
 
 #define TFT_BUF_SZ 20 // buffersize for tft message
 
 void TaskPoti (void)
 {
+    APOS_EnterCriticalRegion();
     int32_t potiVal = Adc_GetValue(1000);
     
     // draw potentiometer value
     char buf[TFT_BUF_SZ];
     snprintf(buf, sizeof(buf), "Poti: %d mV", potiVal);
-	Tft_DrawString(10, 18+4*24, buf);	
+	Tft_DrawString(10, 18+4*24, buf);
+    
+    APOS_ExitCriticalRegion();
+    APOS_TaskDelay(100);
+
 }

@@ -152,18 +152,18 @@
         <Bp>
           <Number>0</Number>
           <Type>0</Type>
-          <LineNumber>82</LineNumber>
+          <LineNumber>31</LineNumber>
           <EnabledFlag>1</EnabledFlag>
-          <Address>134218166</Address>
+          <Address>134219488</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
           <SizeOfObject>0</SizeOfObject>
           <BreakByAccess>0</BreakByAccess>
           <BreakIfRCount>1</BreakIfRCount>
-          <Filename>.\src\APOS.c</Filename>
+          <Filename>.\src\BSP\systick.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression>\\Apus\src/APOS.c\82</Expression>
+          <Expression>\\Apus\src/BSP/systick.c\31</Expression>
         </Bp>
       </Breakpoint>
       <WatchWindow1>
@@ -175,45 +175,25 @@
         <Ww>
           <count>1</count>
           <WinNumber>1</WinNumber>
-          <ItemText>state</ItemText>
+          <ItemText>currentTask</ItemText>
         </Ww>
         <Ww>
           <count>2</count>
           <WinNumber>1</WinNumber>
-          <ItemText>&amp;TCB_Tasks</ItemText>
+          <ItemText>criticalSectionCnt</ItemText>
         </Ww>
         <Ww>
           <count>3</count>
           <WinNumber>1</WinNumber>
-          <ItemText>taskA_stack</ItemText>
+          <ItemText>num</ItemText>
         </Ww>
         <Ww>
           <count>4</count>
           <WinNumber>1</WinNumber>
-          <ItemText>APOS_TASK_STACK_SZ</ItemText>
+          <ItemText>taskStacks[APOS_TASK_NR]</ItemText>
         </Ww>
         <Ww>
           <count>5</count>
-          <WinNumber>1</WinNumber>
-          <ItemText>pStack</ItemText>
-        </Ww>
-        <Ww>
-          <count>6</count>
-          <WinNumber>1</WinNumber>
-          <ItemText>sp</ItemText>
-        </Ww>
-        <Ww>
-          <count>7</count>
-          <WinNumber>1</WinNumber>
-          <ItemText>taskB_stack</ItemText>
-        </Ww>
-        <Ww>
-          <count>8</count>
-          <WinNumber>1</WinNumber>
-          <ItemText>pc</ItemText>
-        </Ww>
-        <Ww>
-          <count>9</count>
           <WinNumber>1</WinNumber>
           <ItemText>currentTask</ItemText>
         </Ww>
@@ -222,7 +202,7 @@
         <Mm>
           <WinNumber>1</WinNumber>
           <SubType>2</SubType>
-          <ItemText>0x20000060</ItemText>
+          <ItemText>0x20000C70</ItemText>
           <AccSizeX>0</AccSizeX>
         </Mm>
       </MemoryWindow1>

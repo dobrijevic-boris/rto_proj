@@ -11,7 +11,7 @@
 #include "BSP/TftDisplay.h"
 #include "StdDef.h"
 #include "TaskMandelbrot.h"
-
+#include "APOS.h"
 // Quelle Algorithmus Mandelbrot: http://warp.povusers.org/Mandelbrot/ 
 
 #define ImageHeight 150
@@ -82,8 +82,10 @@ static BOOL MandelBrot (void)
 }
 
 
-BOOL TaskMandelbrot (void)
+void TaskMandelbrot (void)
 {
+    APOS_EnterCriticalRegion();
 	Tft_DrawString(10, 18+5*24, "MandelBrot ");
-	return MandelBrot();	
+    MandelBrot();	
+    APOS_ExitCriticalRegion();
 }

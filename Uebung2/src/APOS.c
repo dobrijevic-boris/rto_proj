@@ -4,8 +4,8 @@
 
 APOS_TCB_STRUCT TCB_Tasks[APOS_TASK_NR];
 
-static uint8_t currentTask = TASK_A;
-
+static uint8_t currentTask = TASK_COUNTER;
+static volatile uint32_t criticalSectionCnt = 0;
 // function prototypes
 uint32_t* APOS_Select_next_task(uint32_t *sp);
 
@@ -16,11 +16,11 @@ void APOS_Init (void)
 }
 void APOS_Start (void) 
 {
-    TCB_Tasks[TASK_A].pStack =  (uint32_t*)TCB_Tasks[TASK_A].pStack + 16;
+    TCB_Tasks[currentTask].pStack =  (uint32_t*)TCB_Tasks[currentTask].pStack + 16;
     
-    uint32_t pc = *((uint32_t*)TCB_Tasks[TASK_A].pStack-2);
-    // switch to taskA
-    __set_PSP((uint32_t)TCB_Tasks[TASK_A].pStack);  // PSP zeigt ans Ende des Arrays
+    uint32_t pc = *((uint32_t*)TCB_Tasks[currentTask].pStack-2);
+    // switch to currentTask
+    __set_PSP((uint32_t)TCB_Tasks[currentTask].pStack);  // PSP zeigt ans Ende des Arrays
     APOS_set_ctrl_pc(pc);
 
 }
@@ -42,8 +42,8 @@ void APOS_TASK_Create (
     pTask->pRoutine = pRoutine;
     pTask->StackSize = StackSize;
     pTask->TimeSlice = TimeSlice;
-    pTask->state = APOS_TASK_READY;
-    pTask->delay = 0;
+    pTask->state = state;
+    pTask->delay = delay;
     
     // Init stack
     uint32_t* sp = (uint32_t*)pStack;
@@ -73,10 +73,22 @@ uint32_t* APOS_Select_next_task(uint32_t *sp) {
     
     // set running task to ready
     if (TCB_Tasks[currentTask].state == APOS_TASK_RUNNING)
+    {
         TCB_Tasks[currentTask].state = APOS_TASK_READY;
+    }
+    uint8_t tempTask = currentTask;
+    uint8_t found = 0;
     do {
-        currentTask = (currentTask + 1) % APOS_TASK_NR;
-    } while (TCB_Tasks[currentTask].state != APOS_TASK_READY);
+        // check if any task ready, if not run nop task
+        currentTask = (currentTask + 1) % APOS_TASK_NR;//% TASK_NOP;
+        if(TCB_Tasks[currentTask].state == APOS_TASK_READY) {
+            found = 1;
+            break;
+        }
+    } while (currentTask != tempTask);
+    if(!found) {
+        currentTask = TASK_COUNTER; //TASK_NOP;
+    }
     
     // Mark new task as RUNNING
     TCB_Tasks[currentTask].state = APOS_TASK_RUNNING;
@@ -99,4 +111,30 @@ void APOS_TaskDelay(uint32_t ticks) {
     TCB_Tasks[currentTask].delay = ticks;
     TCB_Tasks[currentTask].state = APOS_TASK_BLOCKED;
     APOS_Scheduler();
+}
+
+void APOS_EnterCriticalRegion(void)
+{
+    // disable irq for atomic inc
+    __disable_irq();
+    criticalSectionCnt++;
+    __enable_irq();
+}
+
+void APOS_ExitCriticalRegion(void)
+{
+    __disable_irq();
+    if (criticalSectionCnt > 0) {
+        criticalSectionCnt--;
+    }
+    __enable_irq();
+}
+uint32_t APOS_GetStatusRegion() {
+    
+    return criticalSectionCnt;
+}
+
+void APOS_NOP(void) {
+    while(1) {
+    }
 }

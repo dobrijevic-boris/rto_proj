@@ -2,15 +2,19 @@
 #define APOS_H
 
 #include <stdint.h>
-#define APOS_TASK_STACK_SZ (uint32_t)128
-#define APOS_TASK_NR       (uint32_t)3
+#define APOS_TASK_STACK_SZ (uint32_t)256
 
 
 // enum for tasks
 typedef enum {
-    TASK_A = 0,
-    TASK_B,
-    TASK_C
+    TASK_COUNTER = 0,
+    TASK_KEY,
+    TASK_LED,
+    //TASK_MANDELBROT,
+    TASK_POTI,
+    TASK_WATCH,
+    //TASK_NOP,
+    APOS_TASK_NR
 } APOS_TASK_ID;
 
 typedef enum {
@@ -55,9 +59,9 @@ void APOS_TASK_Create (
     uint32_t StackSize, // Größe des Stacks
     uint32_t TimeSlice, // Time-Slice für Round Robin Scheduling
     APOS_TASK_STATE state,
-    uint32_t delay
-    
-);
-
-
+    uint32_t delay);
+void APOS_EnterCriticalRegion(void);
+void APOS_ExitCriticalRegion(void);
+uint32_t APOS_GetStatusRegion();    
+    void APOS_NOP(void);
 #endif
