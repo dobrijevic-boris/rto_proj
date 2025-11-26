@@ -45,7 +45,7 @@ void APOS_Init (void); // Initialisert das Echtzeitbetriebssystem
 void APOS_Start (void); // Starten des Echtzeitbetriebssystems
 void APOS_Scheduler(void); // Call SVC
 uint32_t* APOS_Select_next_task(uint32_t *sp); // select the next task to run
-
+void APOS_TaskDelay(uint32_t ticks);
 void APOS_TASK_Create ( 
     APOS_TCB_STRUCT* pTask, // TaskControlBlock
     const char* pTaskName, // Task Name – nur für Debug-Zwecke
