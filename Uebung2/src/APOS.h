@@ -2,13 +2,9 @@
 #define APOS_H
 
 #include <stdint.h>
-
-#define APOS_TASK_STACK_SZ (uint32_t)512
+#define APOS_TASK_STACK_SZ (uint32_t)32
 #define APOS_TASK_NR       (uint32_t)3
-// global static for psp
-static uint32_t taskAStack[APOS_TASK_STACK_SZ];
-static uint32_t taskBStack[APOS_TASK_STACK_SZ];
-static uint32_t taskCStack[APOS_TASK_STACK_SZ];
+
 
 // enum for tasks
 typedef enum {
@@ -33,13 +29,13 @@ extern APOS_TCB_STRUCT TCB_Tasks[];
 // asm functions
 extern uint32_t* APOS_save_regs(uint32_t *pStack);
 extern void APOS_restore_regs(uint32_t *pStack);
-
+extern void APOS_set_ctrl_pc(uint32_t pc);
 
 
 
 void APOS_Init (void); // Initialisert das Echtzeitbetriebssystem
 void APOS_Start (void); // Starten des Echtzeitbetriebssystems
-void APOS_Scheduler(void);
+uint32_t* APOS_Scheduler(uint32_t *sp);
 
 void APOS_TASK_Create ( 
     APOS_TCB_STRUCT* pTask, // TaskControlBlock

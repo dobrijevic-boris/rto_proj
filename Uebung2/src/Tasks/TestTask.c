@@ -90,7 +90,8 @@ void testTaskA(void) {
     //Debug_TaskOn_A();
     // enter Code
     //Debug_TaskOff_A();
-    APOS_Scheduler();
+    // activate PENDSV
+    SCB->ICSR = SCB->ICSR | (1<<28);
 } 
 }
 void testTaskB(void) {
@@ -99,7 +100,8 @@ void testTaskB(void) {
     //Debug_TaskOn_B();
     // enter Code
     //Debug_TaskOff_B();
-    APOS_Scheduler();
+    // activate PENDSV
+    SCB->ICSR = SCB->ICSR | (1<<28);
     }
 }
 void testTaskC(void) {
@@ -108,7 +110,8 @@ void testTaskC(void) {
     //Debug_TaskOn_C();
     // enter Code
     //Debug_TaskOff_C();
-    APOS_Scheduler();
+    // activate PENDSV
+    SCB->ICSR = SCB->ICSR | (1<<28);
     }
 }
 

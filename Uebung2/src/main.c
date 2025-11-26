@@ -26,46 +26,30 @@
 
 
 /* Private define ------------------------------------------------------------*/
-#define TASK_STACK_SZ (uint32_t)512
+
 #define TASK_PRIO (uint32_t)1
 #define TASK_TMSLC (uint32_t)10
 
-static uint32_t taskA_stack[TASK_STACK_SZ];
-static uint32_t taskB_stack[TASK_STACK_SZ];
-static uint32_t taskC_stack[TASK_STACK_SZ];
 
 const char* TaskA_name = "TaskA";
 const char* TaskB_name = "TaskB";
 const char* TaskC_name = "TaskC";
 
-static uint8_t state = TASK_A;
+static uint32_t taskA_stack[APOS_TASK_STACK_SZ];
+static uint32_t taskB_stack[APOS_TASK_STACK_SZ];
+static uint32_t taskC_stack[APOS_TASK_STACK_SZ];
 
-void PendSV_Handler(void) {
-    
-    // in assembler
-
-    // save registers ( in asm)
-    TCB_Tasks[state].pStack = APOS_save_regs(TCB_Tasks[state].pStack);
-    // schedule ( in c)
-    switch(state)
-    {
-        case TASK_A:
-            state = TASK_B;
-            break;
-        case TASK_B:
-            state = TASK_C;
-            break;
-        case TASK_C:
-            state = TASK_A;
-            break;
-        default:
-            state = TASK_A;
-            break;
+static void initStack(void) {
+    for(uint32_t i=0; i<APOS_TASK_STACK_SZ;i++) {
+        taskA_stack[i] = 0xAAAAAAAA;
+    }    
+    for(uint32_t i=0; i<APOS_TASK_STACK_SZ;i++) {
+        taskB_stack[i] = 0xBBBBBBBB;
+    }    
+    for(uint32_t i=0; i<APOS_TASK_STACK_SZ;i++) {
+        taskC_stack[i] = 0xCCCCCCCC;
     }
-    // restore reg (in asm) 
-    APOS_restore_regs(TCB_Tasks[state].pStack);
 }
-
 
 int main(void) {
     
@@ -76,10 +60,10 @@ int main(void) {
     Tick_InitSysTick();
     
     APOS_Init();
-    
-    APOS_TASK_Create(&TCB_Tasks[TASK_A], TaskA_name, TASK_PRIO, testTaskA, taskA_stack, TASK_STACK_SZ, TASK_TMSLC);
-    APOS_TASK_Create(&TCB_Tasks[TASK_B], TaskB_name, TASK_PRIO, testTaskB, taskB_stack, TASK_STACK_SZ, TASK_TMSLC);
-    APOS_TASK_Create(&TCB_Tasks[TASK_C], TaskC_name, TASK_PRIO, testTaskC, taskC_stack, TASK_STACK_SZ, TASK_TMSLC);
+    initStack();
+    APOS_TASK_Create(&TCB_Tasks[TASK_A], TaskA_name, TASK_PRIO, testTaskA, taskA_stack, APOS_TASK_STACK_SZ, TASK_TMSLC);
+    APOS_TASK_Create(&TCB_Tasks[TASK_B], TaskB_name, TASK_PRIO, testTaskB, taskB_stack, APOS_TASK_STACK_SZ, TASK_TMSLC);
+    APOS_TASK_Create(&TCB_Tasks[TASK_C], TaskC_name, TASK_PRIO, testTaskC, taskC_stack, APOS_TASK_STACK_SZ, TASK_TMSLC);
    
     void __enable_irq(void);
     

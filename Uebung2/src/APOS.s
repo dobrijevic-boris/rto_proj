@@ -2,6 +2,26 @@
   THUMB
   EXPORT APOS_save_regs
   EXPORT APOS_restore_regs
+  EXPORT PendSV_Handler
+  IMPORT APOS_Scheduler
+ 
+  EXPORT APOS_set_ctrl_pc
+
+APOS_set_ctrl_pc
+        ; pc and control done in one call
+        MOVS  r1, #2
+        MSR   CONTROL, r1 ; set control register 0x02
+        BX    r0 
+
+PendSV_Handler
+        MRS     r0, PSP          ; r0 = current PSP (thread context)
+        BL      APOS_save_regs   ; r0 = PSP after saving r4–r11
+        BL      APOS_Scheduler   ; r0 = PSP of next task (from TCB_Tasks[state])
+        BL      APOS_restore_regs; restore r4–r11 and MSR PSP
+        ;EXC_Return to trigger new pc
+        LDR r0, =0xFFFFFFFD       ;  restore original EXC_RETURN
+        MOV lr, r0
+        BX  lr                   ; return
 
 
 APOS_save_regs
@@ -33,7 +53,7 @@ APOS_save_regs
 APOS_restore_regs
   ; r0: sp
 
-  ; restore r0-r7
+  ; restore r4-r7
   LDR r4,   [r0, #0]
   LDR r5,   [r0, #4]
   LDR r6,   [r0, #8]
@@ -56,9 +76,6 @@ APOS_restore_regs
   ; load psp
   MSR PSP,  r0
   
-  ;EXC_Return to trigger new pc
-  LDR r0, =0xFFFFFFFD ;load EXC_RETURN into r0 (Thumb-1 doesnt support direct ldr LR)
-  MOV lr, r0          ;lr = EXC_RETURN
-  BX  lr
+  BX lr
     
   END
