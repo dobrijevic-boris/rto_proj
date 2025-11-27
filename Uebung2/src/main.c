@@ -31,8 +31,6 @@
 #define TASK_TMSLC (uint32_t)100 // default 100ms time slice
 #define TASK_COUNTER_TMSLC (uint32_t)10 // 10ms time slice for task counter
 
-
-
 static uint32_t taskStacks[APOS_TASK_NR][APOS_TASK_STACK_SZ];
 
 static void initStack(void) {
@@ -44,15 +42,14 @@ static void initStack(void) {
     }
 }
 
+
 int main(void) {
     
-    __disable_irq();
-    NVIC_SetPriority(PendSV_IRQn, 3); 
     
-    initStack(); // init stack to 0xFF for simpler debugging
+    __disable_irq();
+
     Debug_Init();
     Tick_InitSysTick();
-    
     Key_Init();
     Led_Init();
     Tft_Init();
@@ -60,6 +57,7 @@ int main(void) {
     Tft_ClearScreen();
     Adc_Init(ADC_CHANNEL_POTENTIOMETER);
     
+    initStack(); // init stack to 0xFF for simpler debugging
     APOS_Init();
     APOS_TASK_Create(&TCB_Tasks[TASK_COUNTER], "Counter", TASK_PRIO, TaskCounter, taskStacks[TASK_COUNTER], APOS_TASK_STACK_SZ, TASK_COUNTER_TMSLC, APOS_TASK_RUNNING, 0, TASK_COUNTER_TMSLC);
     APOS_TASK_Create(&TCB_Tasks[TASK_KEY], "Key", TASK_PRIO, TaskKey, taskStacks[TASK_KEY], APOS_TASK_STACK_SZ, TASK_TMSLC, APOS_TASK_READY, 0, 0);

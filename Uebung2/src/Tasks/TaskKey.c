@@ -34,13 +34,26 @@ void TaskKey (void)
         } else if(keyState_WakeUp) {
             Tft_SetForegroundColourRgb16(TFT_COLOR_RED);
         }
-        APOS_EnterCriticalRegion();
-        // draw key state
+        // draw key state (split into three separate critical regions to limit max cs time
         char buf[32];   // buffer for text
-        snprintf(buf, sizeof(buf), "User0:%d User1:%d Wakeup:%d", keyState_User0, keyState_User1, keyState_WakeUp);
+        snprintf(buf, sizeof(buf), "User0:%d", keyState_User0);
+        APOS_EnterCriticalRegion();
         Tft_DrawString(10, 18 + 1 * 24, buf);
-        Debug_SwitchDebugPin(DEBUG_PIN_TASKKEY, Bit_RESET);
         APOS_ExitCriticalRegion();
+        
+        APOS_EnterCriticalRegion();
+        snprintf(buf, sizeof(buf), "User1:%d", keyState_User1);
+        
+        Tft_DrawString(60, 18 + 1 * 24, buf);
+        APOS_ExitCriticalRegion();
+        
+        APOS_EnterCriticalRegion();
+        snprintf(buf, sizeof(buf), "Wakeup:%d", keyState_WakeUp);
+        Tft_DrawString(120, 18 + 1 * 24, buf);
+        APOS_ExitCriticalRegion();
+        
+        
+        Debug_SwitchDebugPin(DEBUG_PIN_TASKKEY, Bit_RESET);
         APOS_TaskDelay(20);
     }
   

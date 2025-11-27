@@ -265,8 +265,171 @@ void APOS_TASK_Create (
     uint32_t TimeLeft)      // time left running   
 \end{lstlisting}
 
-Zusätchlich wurden die gewünschten Änderungen in die bestehenden Tasks eingearbeitet.
-Mandelbrot wurde Zusätzlich optimiert, indem die Unterbrechungen aus Übung 1 wieder entfernt wurden, da dies durch den Scheduler und die multiplen Tasks nicht weiter nötlich ist.
+Zusätzlich wurden die gewünschten Änderungen in die bestehenden Tasks eingearbeitet.
+Mandelbrot wurde Zusätzlich optimiert, indem die Unterbrechungen aus Übung 1 wieder entfernt wurden, da dies durch den Scheduler und die multiplen Tasks nicht weiter nötig ist.
+
+Um die TaskCounter Aufrufe zu maximieren, wurde ein Timeslice von 10ms gewählt, bzw. 100ms für das Zeichnen des Mandelbrots. Dabei ist zu beachten, dass eine Vergrößerung des Timeslices eines dieser Tasks natürlich dazu führt, dass der jeweils andere Task weniger Runningtime erhält. Daher ist es nicht möglich, sowohl den Counter zu maximieren, als auch die Laufzeit des Mandelbrottasks zu minimieren. Die Wahl von 100ms bzw. 10ms ist ein Kompromiss, der für beide Fälle gute Ergebnisse liefert, siehe \ref{sec:Auswertung}.
+
+\section{Auswertung}
+\label{sec:Auswertung}
+
+\subsection{Diverse Messungen}
+
+Das Zeichnen einer Mandelbrot Iteration dauert etwa 16s (35s für 2 Iterationen), siehe Abb. \ref{fig:mandelbrot1}. Der Counter nach 2 Iterationen steht bei ungefähr 9600, entspricht also einem Counter-Wert von etwa 4800 pro Iteration. Nach 6:30 min is der Counter bei 86000, was ca. 5000 pro Mandelbrot Iteration entspricht (bei Mandelbrot iteration von ~16s).
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=0.3\linewidth]{Images/Mandelbrot1}
+	\includegraphics[width=0.3\linewidth]{Images/Mandelbrot2}
+	\includegraphics[width=0.3\linewidth]{Images/MandelbrotN}
+	\caption{Display nach 1,2, n-maliger Iteration von Mandelbrotzeichnung}
+	\label{fig:mandelbrot1}
+\end{figure}
+
+
+\subsection{Messung Salae-Logic-Analyzer}
+
+Abbildung \ref{fig:saleaealltasks} zeigt die Messung mit dem Analyzer aller Tasks. 
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=0.7\linewidth]{Images/SALEAE_AllTasks}
+	\caption{Logic Analyzer: alle Tasks (debug gesetzt am Anfang des while(1) loops, reset am ende)}
+	\label{fig:saleaealltasks}
+\end{figure}
+
+Zur Bestimmung der maximalen criticalsection wird bei betreten der CS ein Debugpin (DebugpinMandelbrot in LogicAnalyzer plot) gesetzt und am Ende der Exit Funktion resettiert. Mit dem LogicAnalyzer ergibt sich damit die maximale Zeit der CS, siehe Abb. \ref{fig:saleaecs}.
+Es zeigt sich, dass die ursprüngliche Implementierung des TaskKey die maximale Zeit einer Critical Section 1.5 ms hat. Daher wurde die TFTWrite hier in 3 Teile aufgespalten, um die Länge der Critical Section zu reduzieren. Nach Verbesserung beträgt die maximale CS Zeit 769 us.
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=0.7\linewidth]{Images/SALEAE_CS}
+	\includegraphics[width=0.3\linewidth]{Images/SALEAE_CScode}
+	\caption{Critical Sections Timings oben: LogicAnalyzer unten: code}
+	\label{fig:saleaecs}
+\end{figure}
+
+APOS\_Scheduler ist in dieser Implementierung lediglich ein Wrapper für den Call des SVC der den PendSV setzt. Zur Bestimmung der Dauer des Scheduler wird die Dauer von APOS\_Select\_next\_task gemessen, in der der nächste Auszuführende Task bestimmt wird, siehe Abbildung \ref{fig:saleaedauerscheduler}. Es ergibt sich eine durchschnittliche Dauer von 2.767 us bzw. 3.252us maximale Dauer für den Scheduler.
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=0.7\linewidth]{Images/SALEAE_DauerScheduler}
+	\caption{}
+	\label{fig:saleaedauerscheduler}
+\end{figure}
+
+\subsection{Analyse MAP-File bzw. Debugger}
+
+\subsubsection{Stackverbrauch Tasks}
+
+Der benötigte Stack der unterschiedlichen Tasks wird bestimmt, indem die Applikation ausgeführt wird und nach einiger Zeit der Stack mittels Debugger betrachtet wird. Dabei lässt sich feststellen, wieviele Werte nicht mehr dem Default Wert entsprechen und damit lässt sich auf den benötigten Stackspeicher schließen.
+Alternativ könnte der benötigte Stack auch genau mittels compiler -stackusage bestimmt werden.
+
+Aus dem Debugger, siehe Abbildungen unten, ergeben sich folgende Werte:
+\begin{itemize}
+	\item TaskCounter: 52*4 byte
+	\item TaskKey: 53*4 byte
+	\item TaskLed: 16*4 byte
+	\item TaskMandelbrot: 68*4 byte
+	\item TaskPoti: 51*4 byte
+	\item TaskWatch: 56*4 byte
+	\item TaskNop: 16*4 byte
+	\item Mainstack: 208*4 byte
+\end{itemize}
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=0.3\linewidth]{Images/SALEAE_stackusage}
+	\caption{Debugger: Stackverbrauch TaskCounter}
+	\label{fig:saleaestackusage}
+\end{figure}
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=0.3\linewidth]{Images/SALEAE_stackKey}
+	\caption{Debugger: Stackverbrauch TaskKey}
+	\label{fig:saleaestackkey}
+\end{figure}
+
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=0.3\linewidth]{Images/SALEAE_stackLed}
+	\caption{Debugger: Stackverbrauch TaskLed}
+	\label{fig:saleaestackled}
+\end{figure}
+
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=0.3\linewidth]{Images/SALEAE_stackMandel}
+	\caption{Debugger: Stackverbrauch TaskMandelbrot}
+	\label{fig:saleaestackmandel}
+\end{figure}
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=0.3\linewidth]{Images/SALEAE_stackPoti}
+	\caption{Debugger: Stackverbrauch TaskPoti}
+	\label{fig:saleaestackpoti}
+\end{figure}
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=0.3\linewidth]{Images/SALEAE_stackWatch}
+	\caption{Debugger: Stackverbrauch TaskWatch}
+	\label{fig:saleaestackwatch}
+\end{figure}
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=0.3\linewidth]{Images/SALEAE_stackNop}
+	\caption{Debugger: Stackverbrauch TaskNop}
+	\label{fig:saleaestacknop}
+\end{figure}
+
+Für mainstack:
+
+26*8*4 bytes, siehe Abbildung \ref{fig:mainstackusage}.
+
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=0.3\linewidth]{Images/mainstackUsage}
+	\includegraphics[width=0.3\linewidth]{Images/mainstackUsage1}
+	\caption{Stackverbrauch Mainstack: code und memory window}
+	\label{fig:mainstackusage}
+\end{figure}
+
+
+
+\clearpage
+\subsubsection{Speicher OS}
+
+Aus Mapfile: 
+
+Total RO  Size (Code + RO Data)                10248 (  10.01kB)
+Total RW  Size (RW Data + ZI Data)             15664 (  15.30kB)
+Total ROM Size (Code + RO Data + RW Data)      10256 (  10.02kB)
+
+
+Damit ist der benötigte RAM Speicher 15.30kB, der benötigte ROM Speicher 10.02kB.
+
+
+\subsubsection{Overhead Task}
+
+Aus Map file: 252 bytes für Taskcontrolblöcke.
+Mit 7 Tasks ergibt sich damit ein Overhead von 36 byte für jeden Task.
+Mit dem statisch allokierten Stack von 256 ergibt sich ein Overhead von 292 byte.
+Aus den gewonnenen Ergebnissen zeigt sich, dass die Stackgröße auch weit geringer gewählt werden kann, um Overhead zu reduzieren, bspw. 128 byte, was zu einem Overhead von 164 byte führt.
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=0.7\linewidth]{Images/SALEAE_mapTCBs}
+	\caption{Größe der TCB aus Map file}
+	\label{fig:saleaemaptcbs}
+\end{figure}
+
+
 
 
 % #################################################################################################

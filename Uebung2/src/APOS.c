@@ -2,6 +2,7 @@
 
 #include "stm32f0xx.h"
 #include "StdDef.h"
+#include "BSP/Debug.h"
 
 APOS_TCB_STRUCT TCB_Tasks[APOS_TASK_NR];
 
@@ -11,9 +12,24 @@ static volatile BOOL schedulerPending = FALSE;
 // function prototypes
 uint32_t* APOS_Select_next_task(uint32_t *sp);
 
+static void TCB_Init(void) {
+    for(uint32_t i=0; i<APOS_TASK_NR;i++) {
+        TCB_Tasks[i].pRoutine = 0;
+        TCB_Tasks[i].Priority = 0;
+        TCB_Tasks[i].pStack = 0;
+        TCB_Tasks[i].pTaskName = 0;
+        TCB_Tasks[i].StackSize = 0;
+        TCB_Tasks[i].state = 0;
+        TCB_Tasks[i].TimeLeft = 0;
+        TCB_Tasks[i].TimeSlice = 0;
+        TCB_Tasks[i].delay = 0;
+    }
+}
 
 void APOS_Init (void) 
 {
+    NVIC_SetPriority(PendSV_IRQn, 3); 
+    TCB_Init();
     
 }
 void APOS_Start (void) 
@@ -72,6 +88,7 @@ void APOS_TASK_Create (
 }
 
 uint32_t* APOS_Select_next_task(uint32_t *sp) {
+    
     TCB_Tasks[currentTask].pStack = sp; // update sp after saving regs
     
     // set running task to ready
@@ -99,6 +116,8 @@ uint32_t* APOS_Select_next_task(uint32_t *sp) {
     
     uint32_t* old_pStack = (uint32_t*)TCB_Tasks[currentTask].pStack; // save old pStack for register load
     TCB_Tasks[currentTask].pStack = (uint32_t*)TCB_Tasks[currentTask].pStack + 8; // r4-r11
+    
+    
     return old_pStack; // return sp from new task
 }
 
@@ -114,6 +133,7 @@ void SVC_Handler(void) {
 void APOS_TaskDelay(uint32_t ticks) {
     TCB_Tasks[currentTask].delay = ticks;
     TCB_Tasks[currentTask].state = APOS_TASK_BLOCKED;
+    
     APOS_Scheduler();
 }
 
@@ -136,7 +156,6 @@ void APOS_ExitCriticalRegion(void)
         schedulerPending = FALSE;
         SCB->ICSR = SCB->ICSR | (1<<28);
     }
-    
     __enable_irq();
 }
 uint32_t APOS_GetStatusRegion() {
