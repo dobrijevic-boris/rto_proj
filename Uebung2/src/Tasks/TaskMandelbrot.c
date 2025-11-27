@@ -17,10 +17,8 @@
 #define ImageHeight 150
 #define ImageWidth  150
 #define OFFSET		150
-#define X_LOOP_CNT  5
 
-
-static BOOL MandelBrot (void)
+static void MandelBrot (void)
 {
 	double MinRe = -2.0;
 	double MaxRe = 1.0;
@@ -29,80 +27,49 @@ static BOOL MandelBrot (void)
 	double Re_factor = (MaxRe-MinRe)/(ImageWidth-1);
 	double Im_factor = (MaxIm-MinIm)/(ImageHeight-1);
 	unsigned MaxIterations = 30;
-    
-	// make static to not loose progress
-	static unsigned int x = 0;
-	static unsigned int y = 0;
-	
-    unsigned int pixelsDrawn = 0;  // allways reset on re-entrancy
-	for( ; y<ImageHeight; ++y)
-	{		
-		double c_im = MaxIm - y*Im_factor;
-		for( ; x<ImageWidth; ++x)
-		{
-			double c_re = MinRe + x*Re_factor;
-			double Z_re = c_re, Z_im = c_im;
-			unsigned char isInside = TRUE;
 
-			for(unsigned n=0; n<MaxIterations; ++n)
+	for(unsigned y=0; y<ImageHeight; ++y)
+	{
+			double c_im = MaxIm - y*Im_factor;
+			for(unsigned x=0; x<ImageWidth; ++x)
 			{
-				double Z_re2 = Z_re*Z_re, Z_im2 = Z_im*Z_im;
-				if(Z_re2 + Z_im2 > 4)
-				{
-					isInside = FALSE;
-					break;
-				}
-				Z_im = 2*Z_re*Z_im + c_im;
-				Z_re = Z_re2 - Z_im2 + c_re;
-			}
+					double c_re = MinRe + x*Re_factor;
 
-			
-			if(isInside)
-			{              
-                APOS_EnterCriticalRegion();
-                //Debug_SwitchDebugPin(DEBUG_PIN_TASKMANDELBROT, Bit_SET);
-				Tft_DrawPixel(y, x + OFFSET);
-                //Debug_SwitchDebugPin(DEBUG_PIN_TASKMANDELBROT, Bit_RESET);
-                APOS_ExitCriticalRegion();                
+					double Z_re = c_re, Z_im = c_im;
+					unsigned char isInside = TRUE;
+					for(unsigned n=0; n<MaxIterations; ++n)
+					{
+							double Z_re2 = Z_re*Z_re, Z_im2 = Z_im*Z_im;
+							if(Z_re2 + Z_im2 > 4)
+							{
+									isInside = FALSE;
+									break;
+							}
+							Z_im = 2*Z_re*Z_im + c_im;
+							Z_re = Z_re2 - Z_im2 + c_re;
+					}
+                    APOS_EnterCriticalRegion();
+                    //Debug_SwitchDebugPin(DEBUG_PIN_TASKMANDELBROT, Bit_SET);
+					if(isInside) { Tft_DrawPixel(y, x + OFFSET); }
+                    //Debug_SwitchDebugPin(DEBUG_PIN_TASKMANDELBROT, Bit_RESET);
+                    APOS_ExitCriticalRegion();     
 			}
-			
-			if(++pixelsDrawn >= X_LOOP_CNT){		// cooperative yield
-                ++x;
-				return FALSE;
-			}
-		}
-		
-		if(x >= ImageWidth){	// reset outside of loop
-			x = 0;
-		}
 	}
-	
-	if(y >= ImageHeight){	// reset outside of loop
-		x = 0;
-        y = 0;
-	}
-    
-    return TRUE;
-}
-
-
+} 
 void TaskMandelbrot (void)
 {
-    BOOL done = FALSE;      // Mandelbrot finished drawing
     BOOL toggle = FALSE;    // toggle color state BLACK/BLUE
 	Tft_DrawString(10, 18+5*24, "MandelBrot ");
     while(1) {
         
         Debug_SwitchDebugPin(DEBUG_PIN_TASKMANDELBROT, Bit_SET);
-        done = MandelBrot();
-        if(done == TRUE) {
-            Debug_SwitchDebugPin(DEBUG_PIN_TASKMANDELBROT, Bit_RESET);
-            if(toggle) {
-                Tft_SetForegroundColourRgb16(TFT_COLOR_BLACK);
-            } else {
-                Tft_SetForegroundColourRgb16(TFT_COLOR_BLUE);
-            }
-            toggle = !toggle;
+        MandelBrot();
+        Debug_SwitchDebugPin(DEBUG_PIN_TASKMANDELBROT, Bit_RESET);
+        if(toggle) {
+            Tft_SetForegroundColourRgb16(TFT_COLOR_BLACK);
+        } else {
+            Tft_SetForegroundColourRgb16(TFT_COLOR_BLUE);
         }
-    }        
+        toggle = !toggle;
+    }       
 }
