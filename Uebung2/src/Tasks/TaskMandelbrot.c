@@ -96,9 +96,9 @@ void TaskMandelbrot (void)
         done = MandelBrot();
         if(done == TRUE) {
             if(toggle) {
-                Tft_SetForegroundColourRgb16(TFT_COLOR_BLUE);
-            } else {
                 Tft_SetForegroundColourRgb16(TFT_COLOR_BLACK);
+            } else {
+                Tft_SetForegroundColourRgb16(TFT_COLOR_BLUE);
             }
             toggle = !toggle;
         }
