@@ -72,8 +72,6 @@ void FillTaskC(void)
         "mov  r11, r0\n"
         "movs r0,  #0xCC\n"
         "mov  r12, r0\n"
-        "movs r0,  #0xC8\n"
-        "mov  r8,  r0\n"
         "movs r0,  #0xC0\n"
         "movs r1,  #0xC1\n"
         "movs r2,  #0xC2\n"

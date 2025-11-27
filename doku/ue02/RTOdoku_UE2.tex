@@ -1,0 +1,207 @@
+% Systemdokumentation OOP3
+% Unterlage für Studenten als Leitfaden für die Erstellung einer SystemDoku
+% 17. Oktober 2022
+% ---------------------------------------------------------------------------
+
+% --- Templates -------------------------------------------------------------
+%\includegraphics{}
+
+
+% Dokumentklasse
+% --------------
+\documentclass[12pt,naustrian,a4widepaper]{scrartcl}   
+% article style
+%   - 11pt Schriftgroesse
+%   - new austrian (neue Rechtschreibung)
+%   - Papierformat A4
+%   - pdf-hyperlinks
+
+% Packages
+% --------
+%\RequirePackage{hgblistings}
+\usepackage[utf8]{inputenc}  % fuer Umlaute, äöü
+\usepackage[T1]{fontenc}
+\usepackage{a4wide}
+\usepackage{times}      % Times Schriften (zusammen mit fontencoding, s.o.)
+\usepackage{babel}
+\usepackage{graphicx}	  % für das Einbinden von Grafiken
+\usepackage{color}      % für färbigen Text
+\usepackage{framed}     % für (Text-) Rahmen
+\usepackage{listings}   % für den Sourcecode
+\usepackage{fancyhdr}   % für Kopf- und Fusszeilen
+\usepackage{pdfpages}	% pdf import fuer angabe
+
+\pagestyle{fancy}       % Kopf- / Fusszeile aktivieren
+\lstset{
+  language={C++},
+  basicstyle=\footnotesize\ttfamily,
+  keywordstyle=\color{blue},%\bfseries,
+  commentstyle=\color{green},
+  frame=single,
+  xleftmargin=0pt,
+  framexleftmargin=0pt,
+  framexrightmargin=0pt,
+  linewidth=\dimexpr\textwidth+3cm\relax,
+  breaklines=true,
+  tabsize=3,
+  numbers=left, numberstyle=\tiny, stepnumber=1, numbersep=5pt
+}
+
+% Seitenspiegel -------------
+\typearea{8}	% Festlegung des Seitenspiegels gem. Koma. 4..groß, 9..klein
+
+% Kopfzeile ---------
+\lhead{{\footnotesize{Boris Dobrijevic, Maximilian Ebert}}}   %  (links)
+\rhead{{\footnotesize{Seite \thepage}}}      %  (rechts)
+
+% Fusszeile ---------
+\lfoot{}  % links
+\cfoot{}  % mitte 
+\rfoot{}  % rechts
+
+% Absatzformatierung ------------------
+\setlength{\parindent}{0cm}   % Einrückung der 1. Zeile jedes Absatzes
+\setlength{\parskip}{10pt}    % Abstand zwischen den Absätzen
+
+
+% Package für Hyperlinks (mit pdf-Optionen) -----------------------------------------
+\usepackage[
+urlcolor=blue,		% blaue weblinks
+linkcolor=black,	% interne Links sind schwarz
+colorlinks=true,        % links werden eingefürbt
+pdfstartview=FitH,      % PDF-Anzeige: Fensterbreite
+pdfborder={0 0 0},      % keine Umrandung um links
+pdftitle   ={Systemdokumentation},% Referenzen in der Pdf-Datei
+pdfauthor  ={Boris Dobrijevic, Maximilian Ebert},
+pdfsubject ={Systemdoku},
+pdfcreator ={Der Creator},
+pdfproducer={Der Producer},
+pdfkeywords={Dokumentation, Systemdokumentation}
+]{hyperref}
+
+% Beginn des Dokumentes ---------------------
+\begin{document}
+\selectlanguage{naustrian}   % oder "american" für engl. Texte
+
+% Titelblatt ----------
+\title {\vspace{1cm}
+       \includegraphics[width=8cm]{./Images/FhOOeLogoOkt2009_HSD_Rot_pastell}\\
+       \vspace{2cm}
+       {\textbf{Systemdokumentation\\Übung 02}}\\
+       \vspace{5mm}
+       {\small{Version 1.0}}\\
+       \vspace{5mm}
+}
+
+\author{\small{Boris Dobrijevic}}
+\date  {\small{Hagenberg, \today}}
+%\maketitle
+
+
+\includepdf[pages={1-4}]{uebung_2_RTO.pdf}
+\clearpage
+
+% Inhalts-, Tabellen- und Bildverzeichnis (werden generiert) ----------------------------------------------------------
+\tableofcontents
+
+\clearpage
+\subsection{Schritt 1}
+Alle Files wurden wie in der Angabe abverlangt angelegt und die verlangten Funktionen wurden implementiert.
+
+Die Funktion APOS\_TASK\_Create() füllt einfach das spezifizierte TCB Struct mit den übergebenen Werten an.
+Mehr zu den TCB Strukturen in Schritt 2.
+\\
+\\
+Die Process-Stacks sind global angelegt und werden mit der Funktion APOS\_Init() initialisiert. Hierbei werden die gesamten Process-Stacks mit 0xFF beschrieben. 
+
+Nach dem Anlegen der TCBs und dem Initialisieren der Stacks kann die Funktion APOS\_Start() ausgeführt werden.
+Diese vollführt dabei wie bereits in Übung 1 einen Task-Switch vom Master-Stack auf den Process-Stack, hierbei initial auf TaskA:\\
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize,breaklines=true,frame=single,label=regular_loop]
+
+    __set_PSP((uint32_t)TCB_TaskA.pStack + TCB_TaskA.StackSize);  // PSP zeigt ans Ende des Arrays
+    __set_CONTROL(0x02);                    // Bit 1 = 1 ? benutze PSP im Thread-Modus
+    __ISB();                                // Pipeline leeren
+\end{lstlisting}
+
+Bei den FillTasks war zu beachten, dass die oberen Register nicht einfach direkt beschrieben werden können.
+Hierbei werden indirekte Verschiebungen mittels MOVS durchgefürht.\\
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize,breaklines=true,frame=single,label=regular_loop]
+void FillTaskC(void)
+{
+    __asm volatile (
+        "movs r0,  #0xC8\n"
+        "mov  r8,  r0\n"
+        ...
+}
+\end{lstlisting}
+
+
+\subsubsection{APOS}
+Im APOS-Header-File wurde eine Struktur für TCBs angelegt, welche zum Verwalten der Tasks genutzt werden.
+Dabei wurde die Funktionsdeklaration APOS\_TASK\_Create() als Vorlage dafür herbeigezogen.
+
+Die Strukturen der Tasks sind global angelegt und werden bei Bedarf per "extern" Keyword eingebunden.
+Somit sind diese immer garantiert angelegt.
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize,breaklines=true,frame=single,label=regular_loop]
+typedef struct {
+    char const* pTaskName;
+    uint32_t Priority;
+    void (*pRoutine)(void);
+    void * pStack;
+    uint32_t StackSize;
+    uint32_t TimeSlice;
+} APOS_TCB_STRUCT;
+\end{lstlisting}
+
+
+
+
+
+In der Funktion APOS\_Init() 
+
+
+% #################################################################################################
+%      Quellcode
+% #################################################################################################
+\clearpage
+\section{Quellcode}
+% UnitTest
+\subsection{Beispiel 1}
+% \subsubsection{UnitTest - main.cpp}
+% \lstinputlisting{./../UnitTest/main.cpp}
+% 
+% \subsubsection{UnitTest - StringOps.h}
+% \lstinputlisting{./../UnitTest/StringOps.h}
+% 
+% \subsubsection{UnitTest - StringOps.cpp}
+% \lstinputlisting{./../UnitTest/StringOps.cpp}
+% 
+% \subsubsection{UnitTest - StringOpsTest.h}
+% \lstinputlisting{./../UnitTest/StringOpsTest.h}
+% 
+% \subsubsection{UnitTest - StringOpsTest.cpp}
+% \lstinputlisting{./../UnitTest/StringOpsTest.cpp}
+%       
+% 
+% \subsection{Beispiel 2}
+% \subsubsection{Laufzeit - main.cpp}
+% \lstinputlisting{./../Laufzeit/main.cpp}
+% 
+% \subsubsection{Laufzeit - Laufzeit.h}
+% \lstinputlisting{./../Laufzeit/Laufzeit.h}
+% 
+% \subsubsection{Laufzeit - Laufzeit.cpp}
+% \lstinputlisting{./../Laufzeit/Laufzeit.cpp}
+% 
+% 
+% \subsection{Beispiel 3}
+% \subsubsection{ListVsVector - main.cpp}
+% \lstinputlisting{./../ListVsVector/main.cpp}
+% 
+% \subsubsection{ListVsVector - ListVsVector.h}
+% \lstinputlisting{./../ListVsVector/ListVsVector.h}
+% 
+% \subsubsection{ListVsVector - ListVsVector.h}
+% \lstinputlisting{./../ListVsVector/ListVsVector.cpp}
+
+\end{document}
