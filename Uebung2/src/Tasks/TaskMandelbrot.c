@@ -60,9 +60,9 @@ static BOOL MandelBrot (void)
 			if(isInside)
 			{              
                 APOS_EnterCriticalRegion();
-                Debug_SwitchDebugPin(DEBUG_PIN_TASKMANDELBROT, Bit_SET);
+                //Debug_SwitchDebugPin(DEBUG_PIN_TASKMANDELBROT, Bit_SET);
 				Tft_DrawPixel(y, x + OFFSET);
-                Debug_SwitchDebugPin(DEBUG_PIN_TASKMANDELBROT, Bit_RESET);
+                //Debug_SwitchDebugPin(DEBUG_PIN_TASKMANDELBROT, Bit_RESET);
                 APOS_ExitCriticalRegion();                
 			}
 			
@@ -93,8 +93,10 @@ void TaskMandelbrot (void)
 	Tft_DrawString(10, 18+5*24, "MandelBrot ");
     while(1) {
         
+        Debug_SwitchDebugPin(DEBUG_PIN_TASKMANDELBROT, Bit_SET);
         done = MandelBrot();
         if(done == TRUE) {
+            Debug_SwitchDebugPin(DEBUG_PIN_TASKMANDELBROT, Bit_RESET);
             if(toggle) {
                 Tft_SetForegroundColourRgb16(TFT_COLOR_BLACK);
             } else {
