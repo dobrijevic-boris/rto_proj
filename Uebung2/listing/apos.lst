@@ -24,12 +24,12 @@ ARM Macro Assembler    Page 1
    17 00000008 F3EF 8009       MRS              r0, PSP     ; r0 = current PSP 
                                                             (thread context)
    18 0000000C F7FF FFFE       BL               APOS_save_regs ; r0 = PSP after
-                                                             saving r4–r11
+                                                             saving r4 r11
    19 00000010 F7FF FFFE       BL               APOS_Select_next_task ; r0 = PS
                                                             P of next task (fro
                                                             m TCB_Tasks[state])
                                                             
-   20 00000014 F7FF FFFE       BL               APOS_restore_regs ; restore r4–
+   20 00000014 F7FF FFFE       BL               APOS_restore_regs ; restore r4 
                                                             r11 and MSR PSP
    21 00000018         ;EXC_Return to trigger new pc
    22 00000018 4810            LDR              r0, =0xFFFFFFFD ;  restore orig
