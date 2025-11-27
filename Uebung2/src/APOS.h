@@ -33,6 +33,7 @@ typedef struct {
     uint32_t TimeSlice;
     APOS_TASK_STATE state;
     uint32_t delay; // in ticks (1ms)
+    uint32_t TimeLeft; // time left running in ticks (ms)
 } APOS_TCB_STRUCT;
 
 
@@ -59,9 +60,12 @@ void APOS_TASK_Create (
     uint32_t StackSize, // Größe des Stacks
     uint32_t TimeSlice, // Time-Slice für Round Robin Scheduling
     APOS_TASK_STATE state,
-    uint32_t delay);
+    uint32_t delay,
+    uint32_t TimeLeft);
 void APOS_EnterCriticalRegion(void);
 void APOS_ExitCriticalRegion(void);
 uint32_t APOS_GetStatusRegion();    
-    void APOS_NOP(void);
+void APOS_NOP(void);
+uint8_t APOS_GetCurrentTask(void); 
+    
 #endif

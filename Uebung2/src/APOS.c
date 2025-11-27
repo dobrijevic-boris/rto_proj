@@ -33,7 +33,8 @@ void APOS_TASK_Create (
     uint32_t StackSize,     // Größe des Stacks
     uint32_t TimeSlice,     // Time-Slice für Round Robin Scheduling  
     APOS_TASK_STATE state,  // task state (Ready, running, ...
-    uint32_t delay)         // time delay in ticks (1ms)
+    uint32_t delay,         // time delay in ticks (1ms)
+    uint32_t TimeLeft)      // time left running         
     
     
 {
@@ -92,6 +93,7 @@ uint32_t* APOS_Select_next_task(uint32_t *sp) {
     
     // Mark new task as RUNNING
     TCB_Tasks[currentTask].state = APOS_TASK_RUNNING;
+    TCB_Tasks[currentTask].TimeLeft = TCB_Tasks[currentTask].TimeSlice;
     
     uint32_t* old_pStack = (uint32_t*)TCB_Tasks[currentTask].pStack; // save old pStack for register load
     TCB_Tasks[currentTask].pStack = (uint32_t*)TCB_Tasks[currentTask].pStack + 8; // r4-r11
@@ -137,4 +139,8 @@ uint32_t APOS_GetStatusRegion() {
 void APOS_NOP(void) {
     while(1) {
     }
+}
+
+uint8_t APOS_GetCurrentTask(void) {
+    return currentTask;
 }

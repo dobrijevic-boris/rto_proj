@@ -41,7 +41,13 @@ void SysTick_Handler (void)  {
         }
     }
   }
-  if(APOS_GetStatusRegion() == 0) {   
+  uint8_t currentTask = APOS_GetCurrentTask();
+  //update timeActive
+  if(TCB_Tasks[currentTask].TimeLeft > 0) {
+      TCB_Tasks[currentTask].TimeLeft--;
+  }
+  
+  if(APOS_GetStatusRegion() == 0 && TCB_Tasks[currentTask].TimeLeft == 0) {   
       // set PendSV
       SCB->ICSR = SCB->ICSR | (1<<28);
   }
