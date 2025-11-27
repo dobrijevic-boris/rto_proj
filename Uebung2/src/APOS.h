@@ -10,7 +10,7 @@ typedef enum {
     TASK_COUNTER = 0,
     TASK_KEY,
     TASK_LED,
-    //TASK_MANDELBROT,
+    TASK_MANDELBROT,
     TASK_POTI,
     TASK_WATCH,
     TASK_NOP,
