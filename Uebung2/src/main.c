@@ -28,7 +28,8 @@
 /* Private define ------------------------------------------------------------*/
 
 #define TASK_PRIO (uint32_t)1
-#define TASK_TMSLC (uint32_t)10
+#define TASK_TMSLC (uint32_t)100 // default 100ms time slice
+#define TASK_COUNTER_TMSLC (uint32_t)10 // 10ms time slice for task counter
 
 
 
@@ -60,7 +61,7 @@ int main(void) {
     Adc_Init(ADC_CHANNEL_POTENTIOMETER);
     
     APOS_Init();
-    APOS_TASK_Create(&TCB_Tasks[TASK_COUNTER], "Counter", TASK_PRIO, TaskCounter, taskStacks[TASK_COUNTER], APOS_TASK_STACK_SZ, TASK_TMSLC, APOS_TASK_RUNNING, 0);
+    APOS_TASK_Create(&TCB_Tasks[TASK_COUNTER], "Counter", TASK_PRIO, TaskCounter, taskStacks[TASK_COUNTER], APOS_TASK_STACK_SZ, TASK_COUNTER_TMSLC, APOS_TASK_RUNNING, 0);
     APOS_TASK_Create(&TCB_Tasks[TASK_KEY], "Key", TASK_PRIO, TaskKey, taskStacks[TASK_KEY], APOS_TASK_STACK_SZ, TASK_TMSLC, APOS_TASK_READY, 0);
     APOS_TASK_Create(&TCB_Tasks[TASK_LED], "Led", TASK_PRIO, TaskLed, taskStacks[TASK_LED], APOS_TASK_STACK_SZ, TASK_TMSLC, APOS_TASK_READY, 0);
     APOS_TASK_Create(&TCB_Tasks[TASK_MANDELBROT], "Mandelbrot", TASK_PRIO, TaskMandelbrot, taskStacks[TASK_MANDELBROT], APOS_TASK_STACK_SZ, TASK_TMSLC, APOS_TASK_READY, 0);
