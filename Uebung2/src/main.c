@@ -26,61 +26,52 @@
 
 
 /* Private define ------------------------------------------------------------*/
-#define TASK_STACK_SZ (uint32_t)1024
+
 #define TASK_PRIO (uint32_t)1
 #define TASK_TMSLC (uint32_t)10
 
-static uint32_t taskA_stack[TASK_STACK_SZ];
-static uint32_t taskB_stack[TASK_STACK_SZ];
-static uint32_t taskC_stack[TASK_STACK_SZ];
 
-const char* TaskA_name = "TaskA";
-const char* TaskB_name = "TaskB";
-const char* TaskC_name = "TaskC";
 
-static uint8_t state = 0;
+static uint32_t taskStacks[APOS_TASK_NR][APOS_TASK_STACK_SZ];
 
-void PendSV_Handler(void) {
-    
-    if (state == 0) {
+static void initStack(void) {
+    for(uint32_t j=0; j<APOS_TASK_NR;j++) {
         
-    __set_PSP((uint32_t)(TCB_TaskA.pStack));  // PSP zeigt ans Ende des Arrays
-    __set_CONTROL(0x02);                    // Bit 1 = 1 ? benutze PSP im Thread-Modus
-    __ISB();                                // Pipeline leeren
-    state = 1;
-    }
-    if (state == 1) {
-        
-    __set_PSP((uint32_t)(TCB_TaskB.pStack));  // PSP zeigt ans Ende des Arrays
-    __set_CONTROL(0x02);                    // Bit 1 = 1 ? benutze PSP im Thread-Modus
-    __ISB();        // Pipeline leeren
-    state = 0;
+        for(uint32_t i=0; i<APOS_TASK_STACK_SZ;i++) {
+            taskStacks[j][i] = 0xFFFFFFFF - j;
+        }
     }
 }
 
-
 int main(void) {
     
-    void __disable_irq();
+    __disable_irq();
     NVIC_SetPriority(PendSV_IRQn, 3); 
     
+    initStack(); // init stack to 0xFF for simpler debugging
     Debug_Init();
     Tick_InitSysTick();
     
+    Key_Init();
+    Led_Init();
+    Tft_Init();
+    Tft_SetFont(&TftFont_6x8);
+    Adc_Init(ADC_CHANNEL_POTENTIOMETER);
+    Tft_ClearScreen();
+    
     APOS_Init();
-    
-    
-    FillTaskA();
-    FillTaskB();
-    FillTaskC();
-    
-    APOS_TASK_Create(&TCB_TaskA, TaskA_name, TASK_PRIO, &testTaskA, taskA_stack, TASK_STACK_SZ, TASK_TMSLC);
-    APOS_TASK_Create(&TCB_TaskB, TaskB_name, TASK_PRIO, &testTaskB, taskB_stack, TASK_STACK_SZ, TASK_TMSLC);
-    APOS_TASK_Create(&TCB_TaskC, TaskC_name, TASK_PRIO, &testTaskC, taskC_stack, TASK_STACK_SZ, TASK_TMSLC);
+    APOS_TASK_Create(&TCB_Tasks[TASK_COUNTER], "Counter", TASK_PRIO, TaskCounter, taskStacks[TASK_COUNTER], APOS_TASK_STACK_SZ, TASK_TMSLC, APOS_TASK_RUNNING, 0);
+    APOS_TASK_Create(&TCB_Tasks[TASK_KEY], "Key", TASK_PRIO, TaskKey, taskStacks[TASK_KEY], APOS_TASK_STACK_SZ, TASK_TMSLC, APOS_TASK_READY, 0);
+    APOS_TASK_Create(&TCB_Tasks[TASK_LED], "Led", TASK_PRIO, TaskLed, taskStacks[TASK_LED], APOS_TASK_STACK_SZ, TASK_TMSLC, APOS_TASK_READY, 0);
+    //APOS_TASK_Create(&TCB_Tasks[TASK_MANDELBROT], "Mandelbrot", TASK_PRIO, TaskMandelbrot, taskStacks[TASK_MANDELBROT], APOS_TASK_STACK_SZ, TASK_TMSLC, APOS_TASK_READY, 0);
+    APOS_TASK_Create(&TCB_Tasks[TASK_POTI], "Poti", TASK_PRIO, TaskPoti, taskStacks[TASK_POTI], APOS_TASK_STACK_SZ, TASK_TMSLC, APOS_TASK_READY, 0);
+    APOS_TASK_Create(&TCB_Tasks[TASK_WATCH], "Watch", TASK_PRIO, TaskWatch, taskStacks[TASK_WATCH], APOS_TASK_STACK_SZ, TASK_TMSLC, APOS_TASK_READY, 0);
+    APOS_TASK_Create(&TCB_Tasks[TASK_NOP], "NOP", TASK_PRIO, APOS_NOP, taskStacks[TASK_NOP], APOS_TASK_STACK_SZ, TASK_TMSLC, APOS_TASK_READY, 0);
    
     APOS_Start();
+    __enable_irq();
     
-    void __enable_irq(void);
+    
     
     while(1) {
     }

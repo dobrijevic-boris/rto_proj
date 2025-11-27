@@ -3,7 +3,7 @@
 
 #include "StdDef.h"
 
-BOOL TaskMandelbrot (void);
+void TaskMandelbrot (void);
 
 #endif
 

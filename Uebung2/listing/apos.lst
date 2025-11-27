@@ -4,11 +4,172 @@
 ARM Macro Assembler    Page 1 
 
 
-    1 00000000                 end
+    1 00000000                 AREA             APOS_CODE, CODE, READONLY
+    2 00000000                 THUMB
+    3 00000000                 EXPORT           APOS_save_regs
+    4 00000000                 EXPORT           APOS_restore_regs
+    5 00000000                 EXPORT           PendSV_Handler
+    6 00000000                 IMPORT           APOS_Select_next_task
+    7 00000000         
+    8 00000000                 EXPORT           APOS_set_ctrl_pc
+    9 00000000         
+   10 00000000         APOS_set_ctrl_pc
+   11 00000000         ; pc and control done in one call
+   12 00000000 2102            MOVS             r1, #2
+   13 00000002 F381 8814       MSR              CONTROL, r1 ; set control regis
+                                                            ter 0x02
+   14 00000006 4700            BX               r0
+   15 00000008         
+   16 00000008         PendSV_Handler
+   17 00000008 F3EF 8009       MRS              r0, PSP     ; r0 = current PSP 
+                                                            (thread context)
+   18 0000000C F7FF FFFE       BL               APOS_save_regs ; r0 = PSP after
+                                                             saving r4–r11
+   19 00000010 F7FF FFFE       BL               APOS_Select_next_task ; r0 = PS
+                                                            P of next task (fro
+                                                            m TCB_Tasks[state])
+                                                            
+   20 00000014 F7FF FFFE       BL               APOS_restore_regs ; restore r4–
+                                                            r11 and MSR PSP
+   21 00000018         ;EXC_Return to trigger new pc
+   22 00000018 4810            LDR              r0, =0xFFFFFFFD ;  restore orig
+                                                            inal EXC_RETURN
+   23 0000001A 4686            MOV              lr, r0
+   24 0000001C 4770            BX               lr          ; return
+   25 0000001E         
+   26 0000001E         
+   27 0000001E         APOS_save_regs
+   28 0000001E         ; r0: sp
+   29 0000001E         ; move sp by 8*4 bytes (r4-r11)
+   30 0000001E 3820            SUBS             r0, r0, #32
+   31 00000020         
+   32 00000020 6004            STR              r4, [r0, #0]
+   33 00000022 6045            STR              r5, [r0, #4]
+   34 00000024 6086            STR              r6, [r0, #8]
+   35 00000026 60C7            STR              r7, [r0, #12]
+   36 00000028         
+   37 00000028         ; save r8-r11 (need to move to low reg first as direct L
+                       DR not supported)
+   38 00000028 4642            MOV              r2,   r8
+   39 0000002A 6102            STR              r2,   [r0, #16]
+   40 0000002C         
+   41 0000002C 464A            MOV              r2,   r9
+   42 0000002E 6142            STR              r2,   [r0, #20]
+   43 00000030         
+   44 00000030 4652            MOV              r2,   r10
+   45 00000032 6182            STR              r2,   [r0, #24]
+   46 00000034         
+   47 00000034 465A            MOV              r2,   r11
+   48 00000036 61C2            STR              r2,   [r0, #28]
+   49 00000038         ; return value = new sp
+   50 00000038         
+
+
+
+ARM Macro Assembler    Page 2 
+
+
+   51 00000038 4770            BX               lr
+   52 0000003A         
+   53 0000003A         APOS_restore_regs
+   54 0000003A         ; r0: sp
+   55 0000003A         
+   56 0000003A         ; restore r4-r7
+   57 0000003A 6804            LDR              r4,   [r0, #0]
+   58 0000003C 6845            LDR              r5,   [r0, #4]
+   59 0000003E 6886            LDR              r6,   [r0, #8]
+   60 00000040 68C7            LDR              r7,   [r0, #12]
+   61 00000042         ; restore r8-r11 (need to move to low reg first as direc
+                       t LDR not supported)
+   62 00000042 6902            LDR              r2, [r0, #16]
+   63 00000044 4690            MOV              r8, r2
+   64 00000046         
+   65 00000046 6942            LDR              r2, [r0, #20]
+   66 00000048 4691            MOV              r9, r2
+   67 0000004A         
+   68 0000004A 6982            LDR              r2, [r0, #24]
+   69 0000004C 4692            MOV              r10, r2
+   70 0000004E         
+   71 0000004E 69C2            LDR              r2, [r0, #28]
+   72 00000050 4693            MOV              r11, r2
+   73 00000052         
+   74 00000052         ; add r4-r11 to sp
+   75 00000052 3020            ADDS             r0, r0, #32
+   76 00000054         ; load psp
+   77 00000054 F380 8809       MSR              PSP,  r0
+   78 00000058         
+   79 00000058 4770            BX               lr
+   80 0000005A         
+   81 0000005A                 END
+              00 00 FFFFFFFD 
 Command Line: --debug --xref --diag_suppress=9931,A1950W --cpu=Cortex-M0 --depe
 nd=.\output\apos_1.d -o.\output\apos_1.o -IC:\Users\bayer\AppData\Local\Arm\Pac
 ks\Keil\STM32F0xx_DFP\2.1.1\Drivers\CMSIS\Device\ST\STM32F0xx\Include --predefi
 ne="__EVAL SETA 1" --predefine="__MICROLIB SETA 1" --predefine="__UVISION_VERSI
 ON SETA 538" --predefine="STM32F072xB SETA 1" --list=.\listing\apos.lst src\APO
 S.s
-334 symbols in table
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Relocatable symbols
+
+APOS_CODE 00000000
+
+Symbol: APOS_CODE
+   Definitions
+      At line 1 in file src\APOS.s
+   Uses
+      None
+Comment: APOS_CODE unused
+APOS_restore_regs 0000003A
+
+Symbol: APOS_restore_regs
+   Definitions
+      At line 53 in file src\APOS.s
+   Uses
+      At line 4 in file src\APOS.s
+      At line 20 in file src\APOS.s
+
+APOS_save_regs 0000001E
+
+Symbol: APOS_save_regs
+   Definitions
+      At line 27 in file src\APOS.s
+   Uses
+      At line 3 in file src\APOS.s
+      At line 18 in file src\APOS.s
+
+APOS_set_ctrl_pc 00000000
+
+Symbol: APOS_set_ctrl_pc
+   Definitions
+      At line 10 in file src\APOS.s
+   Uses
+      At line 8 in file src\APOS.s
+Comment: APOS_set_ctrl_pc used once
+PendSV_Handler 00000008
+
+Symbol: PendSV_Handler
+   Definitions
+      At line 16 in file src\APOS.s
+   Uses
+      At line 5 in file src\APOS.s
+Comment: PendSV_Handler used once
+5 symbols
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+External symbols
+
+APOS_Select_next_task 00000000
+
+Symbol: APOS_Select_next_task
+   Definitions
+      At line 6 in file src\APOS.s
+   Uses
+      At line 19 in file src\APOS.s
+Comment: APOS_Select_next_task used once
+1 symbol
+342 symbols in table

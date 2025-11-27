@@ -88,7 +88,6 @@ void testTaskA(void) {
     //Debug_TaskOn_A();
     // enter Code
     //Debug_TaskOff_A();
-    APOS_Scheduler();
 } 
 }
 void testTaskB(void) {
@@ -97,7 +96,6 @@ void testTaskB(void) {
     //Debug_TaskOn_B();
     // enter Code
     //Debug_TaskOff_B();
-    APOS_Scheduler();
     }
 }
 void testTaskC(void) {
@@ -106,7 +104,7 @@ void testTaskC(void) {
     //Debug_TaskOn_C();
     // enter Code
     //Debug_TaskOff_C();
-    APOS_Scheduler();
+    APOS_TaskDelay(10);
     }
 }
 
