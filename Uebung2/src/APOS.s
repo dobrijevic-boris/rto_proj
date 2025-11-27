@@ -15,9 +15,9 @@ APOS_set_ctrl_pc
 
 PendSV_Handler
         MRS     r0, PSP          ; r0 = current PSP (thread context)
-        BL      APOS_save_regs   ; r0 = PSP after saving r4–r11
+        BL      APOS_save_regs   ; r0 = PSP after saving r4 r11
         BL      APOS_Select_next_task   ; r0 = PSP of next task (from TCB_Tasks[state])
-        BL      APOS_restore_regs; restore r4–r11 and MSR PSP
+        BL      APOS_restore_regs; restore r4 r11 and MSR PSP
         ;EXC_Return to trigger new pc
         LDR r0, =0xFFFFFFFD       ;  restore original EXC_RETURN
         MOV lr, r0

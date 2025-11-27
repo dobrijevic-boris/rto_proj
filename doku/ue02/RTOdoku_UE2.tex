@@ -270,6 +270,16 @@ Mandelbrot wurde Zusätzlich optimiert, indem die Unterbrechungen aus Übung 1 w
 
 Um die TaskCounter Aufrufe zu maximieren, wurde ein Timeslice von 10ms gewählt, bzw. 100ms für das Zeichnen des Mandelbrots. Dabei ist zu beachten, dass eine Vergrößerung des Timeslices eines dieser Tasks natürlich dazu führt, dass der jeweils andere Task weniger Runningtime erhält. Daher ist es nicht möglich, sowohl den Counter zu maximieren, als auch die Laufzeit des Mandelbrottasks zu minimieren. Die Wahl von 100ms bzw. 10ms ist ein Kompromiss, der für beide Fälle gute Ergebnisse liefert, siehe \ref{sec:Auswertung}.
 
+Abbildung \ref{fig:display} zeigt die laufende Applikation: Lauflicht, wechselnde Farben nach Knopfdruck.
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=0.7\linewidth]{Images/Display}
+	\caption{Lauflicht, Farbwechsel nach Knopfdruck}
+	\label{fig:display}
+\end{figure}
+
+
 \section{Auswertung}
 \label{sec:Auswertung}
 
@@ -401,7 +411,6 @@ Für mainstack:
 \end{figure}
 
 
-
 \clearpage
 \subsubsection{Speicher OS}
 
@@ -437,5 +446,19 @@ Aus den gewonnenen Ergebnissen zeigt sich, dass die Stackgröße auch weit gerin
 % #################################################################################################
 \clearpage
 \section{Quellcode}
+\subsection{main.c}
+\lstinputlisting{../../Uebung2/src/main.c}
+\subsection{APOS.h}
+\lstinputlisting{../../Uebung2/src/APOS.h}
+\subsection{APOS.c}
+\lstinputlisting{../../Uebung2/src/APOS.c}
+\subsection{APOS.s}
+\lstinputlisting{../../Uebung2/src/APOS.s}
+\subsection{systick.h}
+\lstinputlisting{../../Uebung2/src/BSP/systick.h}
+\subsection{systick.c}
+\lstinputlisting{../../Uebung2/src/BSP/systick.c}
+
+
 
 \end{document}

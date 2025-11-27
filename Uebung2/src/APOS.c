@@ -44,12 +44,12 @@ void APOS_Start (void)
 }
 void APOS_TASK_Create ( 
     APOS_TCB_STRUCT* pTask, // TaskControlBlock
-    const char* pTaskName,  // Task Name – nur für Debug-Zwecke
-    uint32_t Priority,      // Priorität des Tasks (vorerst nicht in Verwendung)
+    const char* pTaskName,  // Task Name nur fuer Debug-Zwecke
+    uint32_t Priority,      // Prioritaet des Tasks (vorerst nicht in Verwendung)
     void (*pRoutine)(void), // Startadresse Task (ROM)
     void * pStack,          // Startadresse Stack des Tasks (RAM)
-    uint32_t StackSize,     // Größe des Stacks
-    uint32_t TimeSlice,     // Time-Slice für Round Robin Scheduling  
+    uint32_t StackSize,     // Groesse des Stacks
+    uint32_t TimeSlice,     // Time Slice fuer Round Robin Scheduling  
     APOS_TASK_STATE state,  // task state (Ready, running, ...
     uint32_t delay,         // time delay in ticks (1ms)
     uint32_t TimeLeft)      // time left running         
