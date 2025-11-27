@@ -67,5 +67,5 @@ void APOS_ExitCriticalRegion(void);
 uint32_t APOS_GetStatusRegion();    
 void APOS_NOP(void);
 uint8_t APOS_GetCurrentTask(void); 
-    
+void APOS_SetSchedulerPending(void);
 #endif

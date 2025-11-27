@@ -1,11 +1,13 @@
 #include "APOS.h"
 
 #include "stm32f0xx.h"
+#include "StdDef.h"
 
 APOS_TCB_STRUCT TCB_Tasks[APOS_TASK_NR];
 
 static uint8_t currentTask = TASK_COUNTER;
 static volatile uint32_t criticalSectionCnt = 0;
+static volatile BOOL schedulerPending = FALSE;
 // function prototypes
 uint32_t* APOS_Select_next_task(uint32_t *sp);
 
@@ -129,6 +131,12 @@ void APOS_ExitCriticalRegion(void)
     if (criticalSectionCnt > 0) {
         criticalSectionCnt--;
     }
+    // if Scheduler Pending exit critical section and trigger PendSV
+    if(criticalSectionCnt == 0 && schedulerPending == TRUE) {
+        schedulerPending = FALSE;
+        SCB->ICSR = SCB->ICSR | (1<<28);
+    }
+    
     __enable_irq();
 }
 uint32_t APOS_GetStatusRegion() {
@@ -143,4 +151,9 @@ void APOS_NOP(void) {
 
 uint8_t APOS_GetCurrentTask(void) {
     return currentTask;
+}
+
+
+void APOS_SetSchedulerPending(void) {
+    schedulerPending = TRUE;
 }

@@ -47,9 +47,13 @@ void SysTick_Handler (void)  {
       TCB_Tasks[currentTask].TimeLeft--;
   }
   
-  if(APOS_GetStatusRegion() == 0 && TCB_Tasks[currentTask].TimeLeft == 0) {   
-      // set PendSV
-      SCB->ICSR = SCB->ICSR | (1<<28);
+  if(TCB_Tasks[currentTask].TimeLeft == 0) {
+      if(APOS_GetStatusRegion() == 0) {          
+          // set PendSV
+          SCB->ICSR = SCB->ICSR | (1<<28);
+      } else {
+          APOS_SetSchedulerPending();
+      }
   }  
   Debug_SwitchDebugPin(DEBUG_PIN_SYSTICK, Bit_RESET);
 }
