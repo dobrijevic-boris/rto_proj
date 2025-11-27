@@ -109,11 +109,14 @@ pdfkeywords={Dokumentation, Systemdokumentation}
 Alle Files wurden wie in der Angabe abverlangt angelegt und die verlangten Funktionen wurden implementiert.
 
 Die Funktion APOS\_TASK\_Create() füllt einfach das spezifizierte TCB Struct mit den übergebenen Werten an.
+Zusätzlich werden die Stacks initialisert.
 Mehr zu den TCB Strukturen in Schritt 2.
 \\
 \\
-Die Process-Stacks sind global angelegt und werden mit der Funktion APOS\_Init() initialisiert. Hierbei werden die gesamten Process-Stacks mit 0xFF beschrieben. 
-
+Die Process-Stacks ist als static Array angelegt, welches die drei Prozesse abbildet.
+%Die Stacks werden mit der Funktion APOS\_Init() initialisiert
+\\
+\\
 Nach dem Anlegen der TCBs und dem Initialisieren der Stacks kann die Funktion APOS\_Start() ausgeführt werden.
 Diese vollführt dabei wie bereits in Übung 1 einen Task-Switch vom Master-Stack auf den Process-Stack, hierbei initial auf TaskA:\\
 \begin{lstlisting}[basicstyle=\ttfamily\footnotesize,breaklines=true,frame=single,label=regular_loop]
@@ -135,29 +138,100 @@ void FillTaskC(void)
 }
 \end{lstlisting}
 
-
-\subsubsection{APOS}
 Im APOS-Header-File wurde eine Struktur für TCBs angelegt, welche zum Verwalten der Tasks genutzt werden.
 Dabei wurde die Funktionsdeklaration APOS\_TASK\_Create() als Vorlage dafür herbeigezogen.
+Diese Strukturen wurde um einen Zustand des Tasks "state" und ein "delay" im zuge der Übung erweitert.
 
-Die Strukturen der Tasks sind global angelegt und werden bei Bedarf per "extern" Keyword eingebunden.
-Somit sind diese immer garantiert angelegt.
-\begin{lstlisting}[basicstyle=\ttfamily\footnotesize,breaklines=true,frame=single,label=regular_loop]
-typedef struct {
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize,breaklines=true,frame=single,label=tcb_struct]
+  typedef struct {
     char const* pTaskName;
     uint32_t Priority;
     void (*pRoutine)(void);
     void * pStack;
     uint32_t StackSize;
     uint32_t TimeSlice;
-} APOS_TCB_STRUCT;
+    APOS_TASK_STATE state;
+    uint32_t delay; // in ticks (1ms)
+    } APOS_TCB_STRUCT;
+  \end{lstlisting}
+  
+  
+Die Strukturen der Tasks sind global angelegt und werden bei Bedarf per "extern" Keyword eingebunden.
+Somit sind diese immer garantiert angelegt.
+
+\subsection{Schritt 2}
+Task-Switches setzten auf das PendSV bit, welches im main() initialisert wird.
+Dies erfolgt mithilfe von einer vordefinierten Funktion NVIC\_SetPriority(PendSV\_IRQn, 3);
+Hierbei wird PRI\_14 mithilfe der Funktion gesetzt.
+Dabei wurde die PendSV Priority auf ein minimum (3) gestellt.
+\\
+\\
+Der PendSV\_Handler wurde hierbei in Assembly programmiert, um eventuelle, nicht offensichtliche Operationen, welche durch den C-Compiler generiert werden, zu vermeiden.
+Dabei vollführt der PendSV\_Handler den Task-Switch, indem er den PSP des derzeitigen Tasks sichert und den PSP des nächsten Tasks lädt.
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize,breaklines=true,frame=single,label=pendsv_handler]
+PendSV_Handler
+        MRS     r0, PSP          ; r0 = current PSP (thread context)
+        BL      APOS_save_regs   ; r0 = PSP after saving r4 r11
+        BL      APOS_Select_next_task   ; r0 = PSP of next task (from TCB_Tasks[state])
+        BL      APOS_restore_regs; restore r4 r11 and MSR PSP
+        ;EXC_Return to trigger new pc
+        LDR r0, =0xFFFFFFFD       ;  restore original EXC_RETURN
+        MOV lr, r0
+        BX  lr                   ; return
 \end{lstlisting}
 
 
+\subsection{Schritt 3}
+Die in Assembly geschriebenen Funktionen APOS\_save\_regs und APOS\_restore\_regs werden dabei genutzt, um die kompletten Register, welche nicht automatisch gesichert werden, auf den Process-Stacks zu sichern und wiederherzustellen.
+Hierbei wird für die höheren Register der selbe indirekte Move aus Schritt 1 genutzt.
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize,breaklines=true,frame=single,label=pendsv_handler]
+APOS_save_regs
+  ; r0: sp
+  ; move sp by 8*4 bytes (r4-r11)
+  SUBS r0, r0, #32
+  ...
+  BX lr
+\end{lstlisting}
+
+Zusätchlich müssen die Funktionen APOS\_set\_ctrl\_pc und PendSV\_Handler in Assembly geschrieben werden, da diese nur funktionieren, sofern der Ablauf der durchgeführten Operationen garantiert werden kann.
+Der PendSV\_Handler vollführt dabei wie bereits beschrieben einen Task-Switch.
+Die Hilfsfunktion APOS\_set\_ctrl\_pc wird genutzt, um den PSP zu laden und zu einer Funktionsadresse in R0 zu springen.
+\\
+\\
+Die Funktionsweise des Round Robin Schedulers wurde mittels Debugger nachgewiesen.
+Hierbei ist in der Registeransicht zu erkennen, dass die Testwerte, welche auf die Process-Stacks geladen werden, nach dem Task-Switch in den Registern vorzufinden sind.
+\includegraphics[width=1\textwidth]{Images/taskA_test.png}
+\includegraphics[width=1\textwidth]{Images/taskB_test.png}
+\includegraphics[width=1\textwidth]{Images/taskC_test.png}
+
+\subsection{Schritt 4}
+Der SysTickHandler wurde so erweitert, sodass pro SysTick ein Task-Switch durchgeführt wird.
+Dies führt zu Problemen, da noch keine Critical Sections vorhanden sind.
+Im Programm selbst führt dies nicht zu Problemen, da diese nicht Zeitsensitiv sind und an der unterbrochenen Stelle wieder fortsetzen.
+
+Probleme treten jedoch bei Operationen auf, welche zeitsensitive Komponenten aufweisen.
+Dies ist beim Display der Fall, da dieses per Protokoll angesprochen wird und hierbei Zeiten eingehalten werden müssen.
+Unterbricht man einen Task, währen dieser das Display beschreibt, so führt dies zu einem Fehler im Protokoll, da Zeiten nicht mehr eingehalten werden.
+Dadurch wird das Display falsch beschrieben.
+\\
+\\
+Um dies zu verhindern wurden die Funktionen APOS\_EnterCriticalRegion(), APOS\_ExitCriticalRegion() und APOS\_GetStatusRegion() geschrieben.
+Die Funktion APOS\_EnterCriticalRegion() inkrementiert dabei eine CS Variable, wobei die Interrupts für dieses Increment deaktiviert werden.
+APOS\_ExitCriticalRegion() macht genau das umgekehrte.
+Mithilfe von APOS\_GetStatusRegion() kann ausgelesen werden, ob die CS betreten werden darf.
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize,breaklines=true,frame=single,label=pendsv_handler]
+void APOS_EnterCriticalRegion(void)
+{
+    // disable irq for atomic inc
+    __disable_irq();
+    criticalSectionCnt++;
+    __enable_irq();
+}
+\end{lstlisting}
+
+Mithilfe des Logi-Analyzers wurde dann überprüft, wie lange der Scheduler durch die CS deaktiviert wird.
 
 
-
-In der Funktion APOS\_Init() 
 
 
 % #################################################################################################
