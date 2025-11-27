@@ -50,8 +50,7 @@ void SysTick_Handler (void)  {
   if(APOS_GetStatusRegion() == 0 && TCB_Tasks[currentTask].TimeLeft == 0) {   
       // set PendSV
       SCB->ICSR = SCB->ICSR | (1<<28);
-  }
-    
+  }  
   Debug_SwitchDebugPin(DEBUG_PIN_SYSTICK, Bit_RESET);
 }
 

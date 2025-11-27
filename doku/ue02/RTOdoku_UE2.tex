@@ -200,9 +200,9 @@ Die Hilfsfunktion APOS\_set\_ctrl\_pc wird genutzt, um den PSP zu laden und zu e
 \\
 Die Funktionsweise des Round Robin Schedulers wurde mittels Debugger nachgewiesen.
 Hierbei ist in der Registeransicht zu erkennen, dass die Testwerte, welche auf die Process-Stacks geladen werden, nach dem Task-Switch in den Registern vorzufinden sind.
-\includegraphics[width=1\textwidth]{Images/taskA_test.png}
-\includegraphics[width=1\textwidth]{Images/taskB_test.png}
-\includegraphics[width=1\textwidth]{Images/taskC_test.png}
+\includegraphics[width=1\textwidth]{Images/taskA_test.png}\\
+\includegraphics[width=1\textwidth]{Images/taskB_test.png}\\
+\includegraphics[width=1\textwidth]{Images/taskC_test.png}\\
 
 \subsection{Schritt 4}
 Der SysTickHandler wurde so erweitert, sodass pro SysTick ein Task-Switch durchgeführt wird.
@@ -229,9 +229,43 @@ void APOS_EnterCriticalRegion(void)
 }
 \end{lstlisting}
 
+Hierzu wird im SysTick\_Handler() überprüft, ob man sich gerade in einer CS befindet oder nicht.
+Das PendSV bit wird nämlich nur dann gesetzt, wenn gerade keine CS betreten wurde.
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize,breaklines=true,frame=single,label=pendsv_handler]
+  ...
+  if(APOS_GetStatusRegion() == 0) {   
+      // set PendSV
+      SCB->ICSR = SCB->ICSR | (1<<28);
+  }
+  ...
+\end{lstlisting}
+
 Mithilfe des Logi-Analyzers wurde dann überprüft, wie lange der Scheduler durch die CS deaktiviert wird.
+Hierfür wurde der Mandelbrot-Task analysiert.
+Die hier zu sehenden High-Phasen stellen die CS dar.
+Währenddessen wird der PendSV-Handler nicht durchgeführt.
+Die längste dabei gemessene CS-Phase beträgt dabei 10.5µs:
+\includegraphics[width=1\textwidth]{Images/SALEAE_CrtclSctn.png}\\
 
 
+\subsection{Schritt 5}
+Die Delays in den Tasks wurden mittels APOS\_TaskDelay() in den einzelnen Tasks festgelegt.
+Jeder der Tasks erhält dazu einen eigenen Delay. 
+Nur im TaskCounter wurde darauf verzichtet, da hier direkt die Funktion APOS\_Scheduler() aufgerufen wird.
+
+
+\subsection{Schritt 6}
+Um den Scheduler zu optimieren wurde auf Time-Slicing gesetzt.
+Hierfür wurde der TCB um einen TimeLeft Eintrag erweitert, in welchem festgehalten wird, wie viel Zeit dem Task noch bleibt.
+Diese wird im Main per Define festgelegt.
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize,breaklines=true,frame=single,label=pendsv_handler]
+void APOS_TASK_Create ( 
+..
+    uint32_t TimeLeft)      // time left running   
+\end{lstlisting}
+
+Zusätchlich wurden die gewünschten Änderungen in die bestehenden Tasks eingearbeitet.
+Mandelbrot wurde Zusätzlich optimiert, indem die Unterbrechungen aus Übung 1 wieder entfernt wurden, da dies durch den Scheduler und die multiplen Tasks nicht weiter nötlich ist.
 
 
 % #################################################################################################
