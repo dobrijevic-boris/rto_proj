@@ -36,7 +36,7 @@ void SysTick_Handler (void)  {
     if(TCB_Tasks[i].state == APOS_TASK_BLOCKED && TCB_Tasks[i].delay > 0) {
         TCB_Tasks[i].delay--; // if blocked, decrease delay
         // set task ready
-        if(TCB_Tasks[i].delay == 0 && TCB_Tasks[i].state != APOS_TASK_RUNNING) {
+        if(TCB_Tasks[i].delay == 0) {
             TCB_Tasks[i].state = APOS_TASK_READY;
         }
     }

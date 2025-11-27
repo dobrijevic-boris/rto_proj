@@ -11,6 +11,7 @@
 #include "StdDef.h"
 #include "TaskLed.h"
 #include "BSP/Led.h"
+#include "BSP/Debug.h"
 #include "Apos.h"
 // Define LED task states
 typedef enum {
@@ -23,7 +24,7 @@ typedef enum {
 void TaskLed (void)
 {
     while(1) {
-        APOS_EnterCriticalRegion();
+        Debug_SwitchDebugPin(DEBUG_PIN_TASKLED, Bit_SET);
         static LED_STATE_t state = LED_STATE_START;
 
         // Simple state machine
@@ -55,7 +56,7 @@ void TaskLed (void)
                 state = LED_STATE_LED3_ON;
                 break;
         }
-        APOS_ExitCriticalRegion();
+        Debug_SwitchDebugPin(DEBUG_PIN_TASKLED, Bit_RESET);
         APOS_TaskDelay(100);
     }
 }

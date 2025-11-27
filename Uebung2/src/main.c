@@ -56,14 +56,14 @@ int main(void) {
     Led_Init();
     Tft_Init();
     Tft_SetFont(&TftFont_6x8);
-    Adc_Init(ADC_CHANNEL_POTENTIOMETER);
     Tft_ClearScreen();
+    Adc_Init(ADC_CHANNEL_POTENTIOMETER);
     
     APOS_Init();
     APOS_TASK_Create(&TCB_Tasks[TASK_COUNTER], "Counter", TASK_PRIO, TaskCounter, taskStacks[TASK_COUNTER], APOS_TASK_STACK_SZ, TASK_TMSLC, APOS_TASK_RUNNING, 0);
     APOS_TASK_Create(&TCB_Tasks[TASK_KEY], "Key", TASK_PRIO, TaskKey, taskStacks[TASK_KEY], APOS_TASK_STACK_SZ, TASK_TMSLC, APOS_TASK_READY, 0);
     APOS_TASK_Create(&TCB_Tasks[TASK_LED], "Led", TASK_PRIO, TaskLed, taskStacks[TASK_LED], APOS_TASK_STACK_SZ, TASK_TMSLC, APOS_TASK_READY, 0);
-    //APOS_TASK_Create(&TCB_Tasks[TASK_MANDELBROT], "Mandelbrot", TASK_PRIO, TaskMandelbrot, taskStacks[TASK_MANDELBROT], APOS_TASK_STACK_SZ, TASK_TMSLC, APOS_TASK_READY, 0);
+    APOS_TASK_Create(&TCB_Tasks[TASK_MANDELBROT], "Mandelbrot", TASK_PRIO, TaskMandelbrot, taskStacks[TASK_MANDELBROT], APOS_TASK_STACK_SZ, TASK_TMSLC, APOS_TASK_READY, 0);
     APOS_TASK_Create(&TCB_Tasks[TASK_POTI], "Poti", TASK_PRIO, TaskPoti, taskStacks[TASK_POTI], APOS_TASK_STACK_SZ, TASK_TMSLC, APOS_TASK_READY, 0);
     APOS_TASK_Create(&TCB_Tasks[TASK_WATCH], "Watch", TASK_PRIO, TaskWatch, taskStacks[TASK_WATCH], APOS_TASK_STACK_SZ, TASK_TMSLC, APOS_TASK_READY, 0);
     APOS_TASK_Create(&TCB_Tasks[TASK_NOP], "NOP", TASK_PRIO, APOS_NOP, taskStacks[TASK_NOP], APOS_TASK_STACK_SZ, TASK_TMSLC, APOS_TASK_READY, 0);

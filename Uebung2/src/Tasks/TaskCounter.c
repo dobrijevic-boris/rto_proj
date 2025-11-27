@@ -9,6 +9,7 @@
   */
 	
 #include "BSP/TftDisplay.h"
+#include "BSP/Debug.h"
 #include "StdDef.h"
 #include "TaskCounter.h"
 #include <stdio.h>
@@ -19,17 +20,21 @@ static char tmpBuf[MAX_LEN];
 
 void TaskCounter (void)
 {
+    // only draw Cnt once
+    APOS_EnterCriticalRegion();
+    Tft_DrawString(10, 18+0*24, "Cnt ");
+    APOS_ExitCriticalRegion();	
     while(1) {
         APOS_EnterCriticalRegion();
+        Debug_SwitchDebugPin(DEBUG_PIN_TASKCOUNTER, Bit_SET);
         static uint32_t counter = 0;
         
         counter++;
         snprintf(tmpBuf, MAX_LEN, "%d", counter);
-        Tft_DrawString(10, 18+0*24, "Cnt ");	
-        Tft_DrawString(10 + 16*7, 18+0*24, tmpBuf);		
+        Tft_DrawString(10 + 16*7, 18+0*24, tmpBuf);	
+        Debug_SwitchDebugPin(DEBUG_PIN_TASKCOUNTER, Bit_RESET);	
         APOS_ExitCriticalRegion();
-        APOS_Scheduler();
-        //APOS_TaskDelay(2);
+        APOS_Scheduler(); // task counter always ready, dont set to blocked
     }
     
 }

@@ -58,8 +58,12 @@ static BOOL MandelBrot (void)
 
 			
 			if(isInside)
-			{
-				Tft_DrawPixel(y, x + OFFSET);	
+			{              
+                APOS_EnterCriticalRegion();
+                Debug_SwitchDebugPin(DEBUG_PIN_TASKMANDELBROT, Bit_SET);
+				Tft_DrawPixel(y, x + OFFSET);
+                Debug_SwitchDebugPin(DEBUG_PIN_TASKMANDELBROT, Bit_RESET);
+                APOS_ExitCriticalRegion();                
 			}
 			
 			if(++pixelsDrawn >= X_LOOP_CNT){		// cooperative yield
@@ -84,8 +88,19 @@ static BOOL MandelBrot (void)
 
 void TaskMandelbrot (void)
 {
-    APOS_EnterCriticalRegion();
+    BOOL done = FALSE;      // Mandelbrot finished drawing
+    BOOL toggle = FALSE;    // toggle color state BLACK/BLUE
 	Tft_DrawString(10, 18+5*24, "MandelBrot ");
-    MandelBrot();	
-    APOS_ExitCriticalRegion();
+    while(1) {
+        
+        done = MandelBrot();
+        if(done == TRUE) {
+            if(toggle) {
+                Tft_SetForegroundColourRgb16(TFT_COLOR_BLACK);
+            } else {
+                Tft_SetForegroundColourRgb16(TFT_COLOR_BLUE);
+            }
+            toggle = !toggle;
+        }
+    }        
 }
