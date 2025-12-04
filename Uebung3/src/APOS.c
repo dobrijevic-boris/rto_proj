@@ -3,6 +3,7 @@
 #include "stm32f0xx.h"
 #include "StdDef.h"
 #include "BSP/Debug.h"
+#include "BSP/systick.h"
 
 APOS_TCB_STRUCT TCB_Tasks[APOS_TASK_NR];
 
@@ -175,4 +176,17 @@ uint8_t APOS_GetCurrentTask(void) {
 
 void APOS_SetSchedulerPending(void) {
     schedulerPending = TRUE;
+}
+
+void APOS_UpdateDelays(void) {
+  // update delay of blocked tasks -> set ready when delay 0
+  for(uint8_t i=0; i < APOS_TASK_NR; i++) {
+    if(TCB_Tasks[i].state == APOS_TASK_BLOCKED && TCB_Tasks[i].delay > 0) {
+        TCB_Tasks[i].delay--; // if blocked, decrease delay
+        // set task ready
+        if(TCB_Tasks[i].delay == 0) {
+            TCB_Tasks[i].state = APOS_TASK_READY;
+        }
+    }
+  }
 }

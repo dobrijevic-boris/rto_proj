@@ -37,9 +37,7 @@ void TaskWatch (void)
         // draw runtime
         char buf[32];   // buffer for text
         snprintf(buf, sizeof(buf), "runtime: %02d:%02d", minutes, seconds);
-        APOS_EnterCriticalRegion();
         Tft_DrawString(10, 18+3*24, buf);
-        APOS_ExitCriticalRegion();
         Debug_SwitchDebugPin(DEBUG_PIN_TASKWATCH, Bit_RESET);
         APOS_TaskDelay(1000);
             

@@ -13,6 +13,7 @@
 #include "TftDisplay.h"
 #include "stm32f0xx_gpio.h"
 #include <assert.h>
+#include "APOS.h"
 
 /****************************************************************
  * Macros
@@ -227,6 +228,7 @@ BOOL Tft_DrawPixel(uint16_t const x, uint16_t const y)
 	if((x < TFT_WIDTH) &&
 		 (y < TFT_HEIGHT))
 	{
+        APOS_EnterCriticalRegion();
 		/* Set drawing region to pixel location */
 		Tft_SetWindow(x, y, 1, 1);
 		/* Send write command */
@@ -235,7 +237,8 @@ BOOL Tft_DrawPixel(uint16_t const x, uint16_t const y)
 		Tft_Port->BSRR = Tft_DC;
 		/* Send pixel */
 		Tft_WritePixel(Tft_Cfg.colours[Tft_ColourIdx_Foreground]);
-		
+		APOS_ExitCriticalRegion();
+        
 		return TRUE;
 	}
 	return FALSE;
@@ -251,11 +254,13 @@ BOOL Tft_DrawHLine(uint16_t const x, uint16_t const y, uint16_t const length)
 	{
 		if(length > 0)
 		{
-      /* Set drawing region and draw in the given colour */
-      Tft_SetWindow(x, y, length, 1);
-      /* Draw the arrea with the given colour */
-      Tft_WritePixels(Tft_Cfg.colours[Tft_ColourIdx_Foreground],
+          APOS_EnterCriticalRegion();
+          /* Set drawing region and draw in the given colour */
+          Tft_SetWindow(x, y, length, 1);
+          /* Draw the arrea with the given colour */
+          Tft_WritePixels(Tft_Cfg.colours[Tft_ColourIdx_Foreground],
                       length);
+          APOS_ExitCriticalRegion();
 		}
 		/* else Nothing to do */
 		return TRUE;
@@ -273,11 +278,13 @@ BOOL Tft_DrawVLine(uint16_t const x, uint16_t const y, uint16_t const length)
 	{
 		if(length > 0)
 		{
+            APOS_EnterCriticalRegion();
             /* Set drawing region and draw in the given colour */
-      Tft_SetWindow(x, y, 1, length);
-      /* Draw the arrea with the given colour */
-      Tft_WritePixels(Tft_Cfg.colours[Tft_ColourIdx_Foreground],
+          Tft_SetWindow(x, y, 1, length);
+          /* Draw the arrea with the given colour */
+          Tft_WritePixels(Tft_Cfg.colours[Tft_ColourIdx_Foreground],
                       length);
+            APOS_ExitCriticalRegion();
 		}
 		/* else Nothing to do */
 		return TRUE;
@@ -324,6 +331,7 @@ BOOL Tft_DrawChar(uint16_t const x, uint16_t const y, char ch)
 	/* Get the pointer where to start in the bitmap */
   uint8_t const * currByte = font->bitmap + (((uint32_t)ch) * bytesForOneChar);
 
+    APOS_EnterCriticalRegion();
 	/* Set drawing window */
   Tft_SetWindow(x, y, font->width, font->height);
 	/* Send write command */
@@ -360,7 +368,7 @@ BOOL Tft_DrawChar(uint16_t const x, uint16_t const y, char ch)
     /* Inc pointer after each row */
     currByte++;
   }
-  
+  APOS_ExitCriticalRegion();
 	return TRUE;
 }
 

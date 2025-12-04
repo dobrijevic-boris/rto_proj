@@ -31,18 +31,9 @@ void SysTick_Handler (void)  {
   Debug_SwitchDebugPin(DEBUG_PIN_SYSTICK, Bit_SET);
   msTicks++;                                    // increment Tick-counter
  
-  // update delay of blocked tasks -> set ready when delay 0
-  for(uint8_t i=0; i < APOS_TASK_NR; i++) {
-    if(TCB_Tasks[i].state == APOS_TASK_BLOCKED && TCB_Tasks[i].delay > 0) {
-        TCB_Tasks[i].delay--; // if blocked, decrease delay
-        // set task ready
-        if(TCB_Tasks[i].delay == 0) {
-            TCB_Tasks[i].state = APOS_TASK_READY;
-        }
-    }
-  }
+  APOS_UpdateDelays();
   uint8_t currentTask = APOS_GetCurrentTask();
-  //update timeActive
+  //update timeLeft active
   if(TCB_Tasks[currentTask].TimeLeft > 0) {
       TCB_Tasks[currentTask].TimeLeft--;
   }

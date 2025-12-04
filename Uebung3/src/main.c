@@ -29,7 +29,7 @@
 
 #define TASK_PRIO (uint32_t)1
 #define TASK_TMSLC (uint32_t)100 // default 100ms time slice
-#define TASK_COUNTER_TMSLC (uint32_t)10 // 10ms time slice for task counter
+#define TASK_COUNTER_TMSLC (uint32_t)0 // 10ms time slice for task counter
 
 static uint32_t taskStacks[APOS_TASK_NR][APOS_TASK_STACK_SZ];
 

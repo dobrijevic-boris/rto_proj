@@ -33,7 +33,7 @@ void TaskCounter (void)
         snprintf(tmpBuf, MAX_LEN, "%d", counter);
         Tft_DrawString(10 + 16*7, 18+0*24, tmpBuf);
         APOS_ExitCriticalRegion();	
-        
+        APOS_TaskDelay(1);
         Debug_SwitchDebugPin(DEBUG_PIN_TASKCOUNTER, Bit_RESET);	
     }
     
