@@ -36,21 +36,32 @@ typedef struct {
     uint32_t TimeLeft; // time left running in ticks (ms)
 } APOS_TCB_STRUCT;
 
-
 extern APOS_TCB_STRUCT TCB_Tasks[];
 
-// asm functions
+
+// ========== asm functions ==========
 extern uint32_t* APOS_save_regs(uint32_t *pStack);
+
 extern void APOS_restore_regs(uint32_t *pStack);
+
 extern void APOS_set_ctrl_pc(uint32_t pc);
 
 
+// ========== c functions   ==========
+// Initialisert das Echtzeitbetriebssystem
+void APOS_Init (void); 
 
-void APOS_Init (void); // Initialisert das Echtzeitbetriebssystem
-void APOS_Start (void); // Starten des Echtzeitbetriebssystems
-void APOS_Scheduler(void); // Call SVC
-uint32_t* APOS_Select_next_task(uint32_t *sp); // select the next task to run
+// Starten des Echtzeitbetriebssystems
+void APOS_Start (void); 
+
+// Call SVC
+void APOS_Scheduler(void); 
+
+// select the next task to run
+uint32_t* APOS_Select_next_task(uint32_t *sp); 
+
 void APOS_TaskDelay(uint32_t ticks);
+
 void APOS_TASK_Create ( 
     APOS_TCB_STRUCT* pTask, // TaskControlBlock
     const char* pTaskName, // Task Name nur fuer DebugZwecke
@@ -62,10 +73,21 @@ void APOS_TASK_Create (
     APOS_TASK_STATE state,
     uint32_t delay,
     uint32_t TimeLeft);
+    
 void APOS_EnterCriticalRegion(void);
+    
 void APOS_ExitCriticalRegion(void);
+    
 uint32_t APOS_GetStatusRegion();    
+    
 void APOS_NOP(void);
+    
 uint8_t APOS_GetCurrentTask(void); 
+    
 void APOS_SetSchedulerPending(void);
+
+void APOS_UpdateDelays(void);
+
+void APOS_UpdateTimeLeft(void);
 #endif
+    

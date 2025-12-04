@@ -96,18 +96,22 @@ uint32_t* APOS_Select_next_task(uint32_t *sp) {
     {
         TCB_Tasks[currentTask].state = APOS_TASK_READY;
     }
+    
     uint8_t tempTask = currentTask;
-    uint8_t found = 0;
-    do {
-        // check if any task ready, if not run nop task
+    uint8_t hi_prio_task = currentTask;
+    do{
         currentTask = (currentTask + 1) % TASK_NOP;
-        if(TCB_Tasks[currentTask].state == APOS_TASK_READY) {
-            found = 1;
-            break;
+        if(TCB_Tasks[currentTask].state == APOS_TASK_READY && TCB_Tasks[hi_prio_task].Priority < TCB_Tasks[currentTask].Priority){
+            hi_prio_task = currentTask;
         }
-    } while (currentTask != tempTask);
-    if(!found) {
+        
+    } while(currentTask != tempTask);
+        
+    if(currentTask == tempTask) {
         currentTask = TASK_NOP;
+    }
+    else{
+        currentTask = hi_prio_task;
     }
     
     // Mark new task as RUNNING
@@ -116,7 +120,6 @@ uint32_t* APOS_Select_next_task(uint32_t *sp) {
     
     uint32_t* old_pStack = (uint32_t*)TCB_Tasks[currentTask].pStack; // save old pStack for register load
     TCB_Tasks[currentTask].pStack = (uint32_t*)TCB_Tasks[currentTask].pStack + 8; // r4-r11
-    
     
     return old_pStack; // return sp from new task
 }
@@ -175,4 +178,17 @@ uint8_t APOS_GetCurrentTask(void) {
 
 void APOS_SetSchedulerPending(void) {
     schedulerPending = TRUE;
+}
+
+void APOS_UpdateDelays(void) {
+  // update delay of blocked tasks -> set ready when delay 0
+  for(uint8_t i=0; i < APOS_TASK_NR; i++) {
+    if(TCB_Tasks[i].state == APOS_TASK_BLOCKED && TCB_Tasks[i].delay > 0) {
+        TCB_Tasks[i].delay--; // if blocked, decrease delay
+        // set task ready
+        if(TCB_Tasks[i].delay == 0) {
+            TCB_Tasks[i].state = APOS_TASK_READY;
+        }
+    }
+  }
 }
