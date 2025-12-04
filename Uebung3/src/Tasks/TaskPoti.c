@@ -30,9 +30,7 @@ void TaskPoti (void)
         char buf[TFT_BUF_SZ];
         snprintf(buf, sizeof(buf), "Poti: %d mV", potiVal);
         
-        APOS_EnterCriticalRegion();
         Tft_DrawString(10, 18+4*24, buf);
-        APOS_ExitCriticalRegion();
         
         Debug_SwitchDebugPin(DEBUG_PIN_TASKPOTI, Bit_RESET);
         APOS_TaskDelay(100);

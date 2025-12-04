@@ -21,20 +21,16 @@ static char tmpBuf[MAX_LEN];
 void TaskCounter (void)
 {
     // only draw Cnt once
-    APOS_EnterCriticalRegion();
     Tft_DrawString(10, 18+0*24, "Cnt ");
-    APOS_ExitCriticalRegion();	
     while(1) {
         Debug_SwitchDebugPin(DEBUG_PIN_TASKCOUNTER, Bit_SET);
         static uint32_t counter = 0;
         
         counter++;
-        APOS_EnterCriticalRegion();
         snprintf(tmpBuf, MAX_LEN, "%d", counter);
         Tft_DrawString(10 + 16*7, 18+0*24, tmpBuf);
-        APOS_ExitCriticalRegion();	
-        APOS_TaskDelay(1);
-        Debug_SwitchDebugPin(DEBUG_PIN_TASKCOUNTER, Bit_RESET);	
+        APOS_Scheduler(); // task switch
+        Debug_SwitchDebugPin(DEBUG_PIN_TASKCOUNTER, Bit_RESET);
     }
     
 }
