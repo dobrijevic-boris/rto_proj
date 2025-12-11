@@ -147,3 +147,4 @@ auto/
 
 # Keil
 *.dobripc
+*.bayer
