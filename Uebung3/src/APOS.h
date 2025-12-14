@@ -24,7 +24,8 @@ typedef enum {
     APOS_TASK_SUSPENDED
 } APOS_TASK_STATE;
 
-typedef struct {
+typedef struct APOS_TCB_STRUCT APOS_TCB_STRUCT;
+struct APOS_TCB_STRUCT {
     char const* pTaskName;
     uint32_t Priority;
     void (*pRoutine)(void);
@@ -34,9 +35,12 @@ typedef struct {
     APOS_TASK_STATE state;
     uint32_t delay; // in ticks (1ms)
     uint32_t TimeLeft; // time left running in ticks (ms)
-} APOS_TCB_STRUCT;
+    struct APOS_TCB_STRUCT* pNextRdy;
+};
 
+// --- external globals
 extern APOS_TCB_STRUCT TCB_Tasks[];
+extern APOS_TCB_STRUCT* pHead;
 
 
 // ========== asm functions ==========
@@ -45,7 +49,6 @@ extern uint32_t* APOS_save_regs(uint32_t *pStack);
 extern void APOS_restore_regs(uint32_t *pStack);
 
 extern void APOS_set_ctrl_pc(uint32_t pc);
-
 
 // ========== c functions   ==========
 // Initialisert das Echtzeitbetriebssystem
@@ -61,6 +64,9 @@ void APOS_Scheduler(void);
 uint32_t* APOS_Select_next_task(uint32_t *sp); 
 
 void APOS_TaskDelay(uint32_t ticks);
+
+// inserts task into ready queue
+void APOS_INSERT_QUEUE(APOS_TCB_STRUCT* pTask);
 
 void APOS_TASK_Create ( 
     APOS_TCB_STRUCT* pTask, // TaskControlBlock
@@ -82,7 +88,7 @@ uint32_t APOS_GetStatusRegion();
     
 void APOS_NOP(void);
     
-uint8_t APOS_GetCurrentTask(void); 
+APOS_TCB_STRUCT* APOS_GetCurrentTask(void); 
     
 void APOS_SetSchedulerPending(void);
 

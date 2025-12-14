@@ -4,48 +4,78 @@
 #include "StdDef.h"
 #include "BSP/Debug.h"
 
+// --- global variables ---
 APOS_TCB_STRUCT TCB_Tasks[APOS_TASK_NR];
+APOS_TCB_STRUCT* pHead = NULL_PTR;  // pointer to first task in ready queue, NULL initialized
 
-static uint8_t currentTask = TASK_COUNTER;
+// --- static variables ---
+static APOS_TCB_STRUCT* currentTask = NULL_PTR;
 static volatile uint32_t criticalSectionCnt = 0;
 static volatile BOOL schedulerPending = FALSE;
-// function prototypes
-uint32_t* APOS_Select_next_task(uint32_t *sp);
 
+// === function definitions == 
 static void TCB_Init(void) {
     for(uint32_t i=0; i<APOS_TASK_NR;i++) {
-        TCB_Tasks[i].pRoutine = 0;
-        TCB_Tasks[i].Priority = 0;
-        TCB_Tasks[i].pStack = 0;
-        TCB_Tasks[i].pTaskName = 0;
-        TCB_Tasks[i].StackSize = 0;
-        TCB_Tasks[i].state = 0;
-        TCB_Tasks[i].TimeLeft = 0;
-        TCB_Tasks[i].TimeSlice = 0;
-        TCB_Tasks[i].delay = 0;
+        TCB_Tasks[i].pRoutine   = 0;
+        TCB_Tasks[i].Priority   = 0;
+        TCB_Tasks[i].pStack     = 0;
+        TCB_Tasks[i].pTaskName  = 0;
+        TCB_Tasks[i].StackSize  = 0;
+        TCB_Tasks[i].state      = APOS_TASK_SUSPENDED;
+        TCB_Tasks[i].TimeLeft   = 0;
+        TCB_Tasks[i].TimeSlice  = 0;
+        TCB_Tasks[i].delay      = 0;
+        TCB_Tasks[i].pNextRdy   = NULL_PTR;
     }
 }
 
-void APOS_Init (void) 
-{
+void APOS_Init (void) {
     NVIC_SetPriority(PendSV_IRQn, 3); 
     TCB_Init();
-    
 }
-void APOS_Start (void) 
-{
-    TCB_Tasks[currentTask].pStack =  (uint32_t*)TCB_Tasks[currentTask].pStack + 16;
-    
-    uint32_t pc = *((uint32_t*)TCB_Tasks[currentTask].pStack-2);
-    // switch to currentTask
-    __set_PSP((uint32_t)TCB_Tasks[currentTask].pStack);  // PSP zeigt ans Ende des Arrays
-    APOS_set_ctrl_pc(pc);
 
+void APOS_Start (void) {
+    // A task must be created and in the ready queue before starting.
+    if (pHead == NULL_PTR) {
+        // Fatal error: No tasks to run.
+        while(1);
+    }
+    
+    // The scheduler will select the first task.
+    APOS_Scheduler();
 }
+
+void APOS_INSERT_QUEUE(APOS_TCB_STRUCT* pTask) {
+
+    if (pTask == NULL_PTR) return;
+
+    pTask->pNextRdy = NULL_PTR;
+
+    APOS_TCB_STRUCT* pCurrent = pHead;
+    APOS_TCB_STRUCT* pPrev = NULL_PTR;
+
+    // Traverse list to find insertion point. Higher number = higher priority.
+    // For same-priority tasks, new task goes after existing ones.
+    while(pCurrent != NULL_PTR && pTask->Priority <= pCurrent->Priority) {
+        pPrev = pCurrent;
+        pCurrent = pCurrent->pNextRdy;
+    }
+    
+    pTask->pNextRdy = pCurrent;
+
+    if (pPrev == NULL_PTR) {
+        // Insert at the head
+        pHead = pTask;
+    } else {
+        // Insert in middle or at end
+        pPrev->pNextRdy = pTask;
+    }
+}
+
 void APOS_TASK_Create ( 
     APOS_TCB_STRUCT* pTask, // TaskControlBlock
     const char* pTaskName,  // Task Name nur fuer Debug-Zwecke
-    uint32_t Priority,      // Prioritaet des Tasks (vorerst nicht in Verwendung)
+    uint32_t Priority,      // Prioritaet des Tasks
     void (*pRoutine)(void), // Startadresse Task (ROM)
     void * pStack,          // Startadresse Stack des Tasks (RAM)
     uint32_t StackSize,     // Groesse des Stacks
@@ -53,116 +83,117 @@ void APOS_TASK_Create (
     APOS_TASK_STATE state,  // task state (Ready, running, ...
     uint32_t delay,         // time delay in ticks (1ms)
     uint32_t TimeLeft)      // time left running         
-    
-    
 {
     pTask->pTaskName = pTaskName;
-    pTask->Priority = Priority;
-    pTask->pRoutine = pRoutine;
+    pTask->Priority  = Priority;
+    pTask->pRoutine  = pRoutine;
     pTask->StackSize = StackSize;
     pTask->TimeSlice = TimeSlice;
-    pTask->state = state;
-    pTask->delay = delay;
+    pTask->state     = state;
+    pTask->delay     = delay;
+    pTask->TimeLeft  = TimeLeft > 0 ? TimeLeft : TimeSlice;
+    pTask->pNextRdy  = NULL_PTR;
+
+    // place task in ready queue if ready
+    if (pTask->state == APOS_TASK_READY) { 
+        //APOS_EnterCriticalRegion();
+        APOS_INSERT_QUEUE(pTask);
+        //APOS_ExitCriticalRegion();
+    }
     
     // Init stack
     uint32_t* sp = (uint32_t*)pStack;
-    sp += APOS_TASK_STACK_SZ;
-    *(--sp) = 0x01000000;
-    *(--sp) = (uint32_t)pRoutine;
-    *(--sp) = 0xFFFFFFFD; // lr (value doesnt mather)
-    *(--sp) = 0xCCCCCCCC; // r12
-    *(--sp) = 0x33333333; // r3
-    *(--sp) = 0x22222222; // r2
-    *(--sp) = 0x11111111; // r1
-    *(--sp) = 0x00000000; // r0
+    sp += StackSize / sizeof(uint32_t);
+    *(--sp) = 0x01000000; // xPSR
+    *(--sp) = (uint32_t)pRoutine; // PC
+    *(--sp) = 0xFFFFFFFD; // LR (EXC_RETURN)
+    *(--sp) = 0xCCCCCCCC; // R12
+    *(--sp) = 0x33333333; // R3
+    *(--sp) = 0x22222222; // R2
+    *(--sp) = 0x11111111; // R1
+    *(--sp) = 0x00000000; // R0
    
-    *(--sp) = 0xBBBBBBBB; // r11
-    *(--sp) = 0xAAAAAAAA; // r10
-    *(--sp) = 0x99999999; // r9
-    *(--sp) = 0x88888888; // r8
-    *(--sp) = 0x77777777; // r7
-    *(--sp) = 0x66666666; // r6
-    *(--sp) = 0x55555555; // r5
-    *(--sp) = 0x44444444; // r4 
+    *(--sp) = 0xBBBBBBBB; // R11
+    *(--sp) = 0xAAAAAAAA; // R10
+    *(--sp) = 0x99999999; // R9
+    *(--sp) = 0x88888888; // R8
+    *(--sp) = 0x77777777; // R7
+    *(--sp) = 0x66666666; // R6
+    *(--sp) = 0x55555555; // R5
+    *(--sp) = 0x44444444; // R4 
     pTask->pStack = sp;
 }
 
 uint32_t* APOS_Select_next_task(uint32_t *sp) {
     
-    TCB_Tasks[currentTask].pStack = sp; // update sp after saving regs
-    
-    // set running task to ready
-    if (TCB_Tasks[currentTask].state == APOS_TASK_RUNNING)
-    {
-        TCB_Tasks[currentTask].state = APOS_TASK_READY;
-    }
-    
-    uint8_t tempTask = currentTask;
-    uint8_t hi_prio_task = currentTask;
-    do{
-        currentTask = (currentTask + 1) % TASK_NOP;
-        if(TCB_Tasks[currentTask].state == APOS_TASK_READY && TCB_Tasks[hi_prio_task].Priority < TCB_Tasks[currentTask].Priority){
-            hi_prio_task = currentTask;
+    // Save previous task's stack pointer, if there was one
+    if (currentTask != NULL_PTR) {
+        currentTask->pStack = sp;
+        // If previous task was running (not blocked), re-queue it
+        if (currentTask->state == APOS_TASK_RUNNING) {
+            currentTask->state = APOS_TASK_READY;
+            APOS_INSERT_QUEUE(currentTask);
         }
-        
-    } while(currentTask != tempTask);
-        
-    if(currentTask == tempTask) {
-        currentTask = TASK_NOP;
     }
-    else{
-        currentTask = hi_prio_task;
-    }
-    
-    // Mark new task as RUNNING
-    TCB_Tasks[currentTask].state = APOS_TASK_RUNNING;
-    TCB_Tasks[currentTask].TimeLeft = TCB_Tasks[currentTask].TimeSlice;
-    
-    uint32_t* old_pStack = (uint32_t*)TCB_Tasks[currentTask].pStack; // save old pStack for register load
-    TCB_Tasks[currentTask].pStack = (uint32_t*)TCB_Tasks[currentTask].pStack + 8; // r4-r11
-    
-    return old_pStack; // return sp from new task
-}
 
+    // Select next task from the head of the ready queue
+    currentTask = pHead;
+    
+    if (currentTask != NULL_PTR) {
+        // Remove the new task from the ready queue
+        pHead = pHead->pNextRdy;
+        currentTask->pNextRdy = NULL_PTR;
+        currentTask->state = APOS_TASK_RUNNING;
+        if (currentTask->TimeLeft < 1) {
+             currentTask->TimeLeft = currentTask->TimeSlice;
+        }
+    } else {
+        // This should not be reached if an idle task is implemented.
+        // For safety, hang here.
+        while(1);
+    }
+
+    return currentTask->pStack;
+}
 
 void APOS_Scheduler(void) {
     __asm volatile ("SVC 0");
 }
 
 void SVC_Handler(void) {
-    SCB->ICSR = SCB->ICSR | (1<<28);
+    SCB->ICSR |= SCB_ICSR_PENDSVSET_Msk;
 }
 
 void APOS_TaskDelay(uint32_t ticks) {
-    TCB_Tasks[currentTask].delay = ticks;
-    TCB_Tasks[currentTask].state = APOS_TASK_BLOCKED;
+    APOS_EnterCriticalRegion();
     
-    APOS_Scheduler();
+    // Set the state to BLOCKED. APOS_Select_next_task will see this
+    // and will not re-queue the task.
+    currentTask->delay = ticks;
+    currentTask->state = APOS_TASK_BLOCKED;
+    
+    APOS_Scheduler(); // Yield the CPU
+    
+    APOS_ExitCriticalRegion();
 }
 
-void APOS_EnterCriticalRegion(void)
-{
-    // disable irq for atomic inc
+void APOS_EnterCriticalRegion(void) {
     __disable_irq();
     criticalSectionCnt++;
-    __enable_irq();
 }
 
-void APOS_ExitCriticalRegion(void)
-{
-    __disable_irq();
+void APOS_ExitCriticalRegion(void) {
     if (criticalSectionCnt > 0) {
         criticalSectionCnt--;
     }
-    // if Scheduler Pending exit critical section and trigger PendSV
-    if(criticalSectionCnt == 0 && schedulerPending == TRUE) {
+    if (criticalSectionCnt == 0 && schedulerPending) {
         schedulerPending = FALSE;
-        SCB->ICSR = SCB->ICSR | (1<<28);
+        SCB->ICSR |= SCB_ICSR_PENDSVSET_Msk;
     }
     __enable_irq();
 }
+
 uint32_t APOS_GetStatusRegion() {
-    
     return criticalSectionCnt;
 }
 
@@ -171,24 +202,27 @@ void APOS_NOP(void) {
     }
 }
 
-uint8_t APOS_GetCurrentTask(void) {
+APOS_TCB_STRUCT* APOS_GetCurrentTask(void) {
     return currentTask;
 }
-
 
 void APOS_SetSchedulerPending(void) {
     schedulerPending = TRUE;
 }
 
 void APOS_UpdateDelays(void) {
-  // update delay of blocked tasks -> set ready when delay 0
+  APOS_EnterCriticalRegion();
   for(uint8_t i=0; i < APOS_TASK_NR; i++) {
-    if(TCB_Tasks[i].state == APOS_TASK_BLOCKED && TCB_Tasks[i].delay > 0) {
-        TCB_Tasks[i].delay--; // if blocked, decrease delay
-        // set task ready
+    if(TCB_Tasks[i].state == APOS_TASK_BLOCKED) {
+        if(TCB_Tasks[i].delay > 0) {
+            TCB_Tasks[i].delay--;
+        }
         if(TCB_Tasks[i].delay == 0) {
             TCB_Tasks[i].state = APOS_TASK_READY;
+            // Task is now ready, insert it back into the ready queue
+            APOS_INSERT_QUEUE(&TCB_Tasks[i]);
         }
     }
   }
+  APOS_ExitCriticalRegion();
 }
