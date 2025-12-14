@@ -4,12 +4,16 @@
 #include "StdDef.h"
 #include "BSP/Debug.h"
 #include "BSP/systick.h"
+#include <string.h>
+#define APOS_STACK_GUARD "STACKEND"
+#define APOS_STACK_GUARD_SIZE (uint8_t)8
 
 APOS_TCB_STRUCT TCB_Tasks[APOS_TASK_NR];
 
 static uint8_t currentTask = TASK_COUNTER;
 static volatile uint32_t criticalSectionCnt = 0;
 static volatile BOOL schedulerPending = FALSE;
+static inline void APOS_AssertStackGuard(const void *pStack);
 // function prototypes
 uint32_t* APOS_Select_next_task(uint32_t *sp);
 
@@ -26,6 +30,7 @@ static void TCB_Init(void) {
         TCB_Tasks[i].delay = 0;
     }
 }
+
 
 void APOS_Init (void) 
 {
@@ -61,12 +66,15 @@ void APOS_TASK_Create (
     pTask->Priority = Priority;
     pTask->pRoutine = pRoutine;
     pTask->StackSize = StackSize;
+    pTask->pStackEnd = pStack;
     pTask->TimeSlice = TimeSlice;
     pTask->state = state;
     pTask->delay = delay;
     
     // Init stack
     uint32_t* sp = (uint32_t*)pStack;
+    
+    memcpy(sp, APOS_STACK_GUARD, 8);
     sp += APOS_TASK_STACK_SZ;
     *(--sp) = 0x01000000;
     *(--sp) = (uint32_t)pRoutine;
@@ -89,6 +97,8 @@ void APOS_TASK_Create (
 }
 
 uint32_t* APOS_Select_next_task(uint32_t *sp) {
+    
+    APOS_AssertStackGuard(TCB_Tasks[currentTask].pStackEnd);
     
     TCB_Tasks[currentTask].pStack = sp; // update sp after saving regs
     
@@ -189,4 +199,21 @@ void APOS_UpdateDelays(void) {
         }
     }
   }
+}
+__attribute__((noinline, cold))
+static void APOS_StackCorrupted(void)
+{
+    /* Stack guard violation: stop here */
+    while (1) {
+    }
+}
+static inline void APOS_AssertStackGuard(const void *pStack)
+{
+    const uint32_t *p = (const uint32_t *)pStack;
+    const uint32_t *g = (const uint32_t *)APOS_STACK_GUARD;
+
+    if ((p[0] == g[0]) && (p[1] == g[1])) {
+        return;
+    }
+    APOS_StackCorrupted();
 }

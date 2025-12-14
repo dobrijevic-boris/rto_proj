@@ -29,6 +29,7 @@ typedef struct {
     uint32_t Priority;
     void (*pRoutine)(void);
     void * pStack;
+    void * pStackEnd;
     uint32_t StackSize;
     uint32_t TimeSlice;
     APOS_TASK_STATE state;
