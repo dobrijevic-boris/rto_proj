@@ -3,6 +3,10 @@
 #include "stm32f0xx.h"
 #include "StdDef.h"
 #include "BSP/Debug.h"
+#include "BSP/systick.h"
+#include <string.h>
+#define APOS_STACK_GUARD "STACKEND"
+#define APOS_STACK_GUARD_SIZE (uint8_t)8
 
 // --- global variables ---
 APOS_TCB_STRUCT TCB_Tasks[APOS_TASK_NR];
@@ -12,6 +16,9 @@ APOS_TCB_STRUCT* pHead = NULL_PTR;  // pointer to first task in ready queue, NUL
 static APOS_TCB_STRUCT* currentTask = NULL_PTR;
 static volatile uint32_t criticalSectionCnt = 0;
 static volatile BOOL schedulerPending = FALSE;
+static inline void APOS_AssertStackGuard(const void *pStack);
+// function prototypes
+uint32_t* APOS_Select_next_task(uint32_t *sp);
 
 // === function definitions == 
 static void TCB_Init(void) {
@@ -88,6 +95,7 @@ void APOS_TASK_Create (
     pTask->Priority  = Priority;
     pTask->pRoutine  = pRoutine;
     pTask->StackSize = StackSize;
+    pTask->pStackEnd = pStack;
     pTask->TimeSlice = TimeSlice;
     pTask->state     = state;
     pTask->delay     = delay;
@@ -103,15 +111,17 @@ void APOS_TASK_Create (
     
     // Init stack
     uint32_t* sp = (uint32_t*)pStack;
-    sp += StackSize / sizeof(uint32_t);
-    *(--sp) = 0x01000000; // xPSR
-    *(--sp) = (uint32_t)pRoutine; // PC
-    *(--sp) = 0xFFFFFFFD; // LR (EXC_RETURN)
-    *(--sp) = 0xCCCCCCCC; // R12
-    *(--sp) = 0x33333333; // R3
-    *(--sp) = 0x22222222; // R2
-    *(--sp) = 0x11111111; // R1
-    *(--sp) = 0x00000000; // R0
+    
+    memcpy(sp, APOS_STACK_GUARD, 8);
+    sp += APOS_TASK_STACK_SZ;
+    *(--sp) = 0x01000000;
+    *(--sp) = (uint32_t)pRoutine;
+    *(--sp) = 0xFFFFFFFD; // lr (value doesnt mather)
+    *(--sp) = 0xCCCCCCCC; // r12
+    *(--sp) = 0x33333333; // r3
+    *(--sp) = 0x22222222; // r2
+    *(--sp) = 0x11111111; // r1
+    *(--sp) = 0x00000000; // r0
    
     *(--sp) = 0xBBBBBBBB; // R11
     *(--sp) = 0xAAAAAAAA; // R10
@@ -125,6 +135,10 @@ void APOS_TASK_Create (
 }
 
 uint32_t* APOS_Select_next_task(uint32_t *sp) {
+    
+    APOS_AssertStackGuard(TCB_Tasks[currentTask].pStackEnd);
+    
+    APOS_AssertStackGuard(TCB_Tasks[currentTask].pStackEnd);
     
     // Save previous task's stack pointer, if there was one
     if (currentTask != NULL_PTR) {
@@ -224,5 +238,23 @@ void APOS_UpdateDelays(void) {
         }
     }
   }
-  APOS_ExitCriticalRegion();
+}
+
+__attribute__((noinline, cold))
+static void APOS_StackCorrupted(void)
+{
+    /* Stack guard violation: stop here */
+    while (1) {
+    }
+}
+
+static inline void APOS_AssertStackGuard(const void *pStack)
+{
+    const uint32_t *p = (const uint32_t *)pStack;
+    const uint32_t *g = (const uint32_t *)APOS_STACK_GUARD;
+
+    if ((p[0] == g[0]) && (p[1] == g[1])) {
+        return;
+    }
+    APOS_StackCorrupted();
 }
