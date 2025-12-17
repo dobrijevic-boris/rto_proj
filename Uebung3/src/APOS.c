@@ -77,12 +77,17 @@ void APOS_INSERT_QUEUE(APOS_TCB_STRUCT* pTask) {
     }
     
     pTask->pNextRdy = p1;
-
-    if (pPrev == NULL_PTR) {
+    
+    if(pPrev == pTask) {
+        // the head stays the same, dont change anything
+        return;
+    }
+    else if (pPrev == NULL_PTR) {
         // Insert at the head
         pTask->pNextRdy = pHead;
         pHead = pTask;
-    } else {
+    } 
+    else {
         // Insert in middle or at end
         pPrev->pNextRdy = pTask;
         pTask->pNextRdy = p1;
@@ -180,6 +185,14 @@ void APOS_Scheduler(void) {
 
 void SVC_Handler(void) {
     SCB->ICSR |= SCB_ICSR_PENDSVSET_Msk;
+}
+
+void APOS_RemoveFromReadyQueue(APOS_TCB_STRUCT* pTask){
+    
+    if(pTask == pHead){
+        pHead->pNextRdy = NULL_PTR;
+        pHead = pHead->pNextRdy;
+    }
 }
 
 void APOS_TaskDelay(uint32_t ticks) {
