@@ -46,56 +46,38 @@ void APOS_Start (void) {
         while(1); // Fatal error: No tasks to run.
     }
     
-    currentTask = pHead;                    // first task which runs is the phead
     pHead->pStack = (uint32_t*)pHead->pStack + 16;
     uint32_t pc =*((uint32_t*)pHead->pStack-2);
     // switch to currentTask
-    __set_PSP((uint32_t)pHead->pStack);     // PSP zeigt ans Ende des Arrays
+    __set_PSP((uint32_t)pHead->pStack);  // PSP zeigt ans Ende des Arrays
     APOS_set_ctrl_pc(pc);
-
 }
 
 void APOS_INSERT_QUEUE(APOS_TCB_STRUCT* pTask) {
+
     if (pTask == NULL_PTR) return;
 
-    if(pHead == NULL_PTR) {
-        // if ready-queue empty -> add task at top
-        pHead = pTask;
-        pTask->pNextRdy = NULL_PTR;
-        return;
-    }
-    
-    APOS_TCB_STRUCT* p1 = pHead;  // start at head
-    APOS_TCB_STRUCT* pHeadNext = pHead->pNextRdy;
+    pTask->pNextRdy = NULL_PTR;
+
+    APOS_TCB_STRUCT* pCurrent = pHead;
     APOS_TCB_STRUCT* pPrev = NULL_PTR;
 
     // Traverse list to find insertion point. Higher number = higher priority.
     // For same-priority tasks, new task goes after existing ones.
-    while(p1 != NULL_PTR && pTask->Priority <= p1->Priority) {
-        pPrev = p1;
-        p1 = p1->pNextRdy;
+    while(pCurrent != NULL_PTR && pTask->Priority <= pCurrent->Priority) {
+        pPrev = pCurrent;
+        pCurrent = pCurrent->pNextRdy;
     }
     
-    pTask->pNextRdy = p1;
-    
-    if(pPrev == pTask) {
-        // the head stays the same, dont change anything
-        return;
-    }
-    else if (pPrev == NULL_PTR) {
+    pTask->pNextRdy = pCurrent;
+
+    if (pPrev == NULL_PTR) {
         // Insert at the head
-        pTask->pNextRdy = pHead;
         pHead = pTask;
     } 
     else {
         // Insert in middle or at end
         pPrev->pNextRdy = pTask;
-        pTask->pNextRdy = p1;
-        
-        if(pTask == pHead){
-            // head moved from head position
-            pHead = pHeadNext;  // save detached head
-        }
     }
 }
 
@@ -157,11 +139,10 @@ void APOS_TASK_Create (
 uint32_t* APOS_Select_next_task(uint32_t *sp) {
     
     APOS_AssertStackGuard(pHead->pStackEnd);
-  
+    
+    // Save previous task's stack pointer, if there was one
     if (currentTask != NULL_PTR) {
-        // Update task's stack pointer, if there was one
         currentTask->pStack = sp;
-        
         // If previous task was running (not blocked), re-queue it
         if (currentTask->state == APOS_TASK_RUNNING) {
             currentTask->state = APOS_TASK_READY;
@@ -169,11 +150,21 @@ uint32_t* APOS_Select_next_task(uint32_t *sp) {
         }
     }
 
-    // Remove the new task from the ready queue
+    // Select next task from the head of the ready queue
     currentTask = pHead;
-    currentTask->state = APOS_TASK_RUNNING;
-    if (currentTask->TimeLeft < 1) {
-         currentTask->TimeLeft = currentTask->TimeSlice;
+    
+    if (currentTask != NULL_PTR) {
+        // Remove the new task from the ready queue
+        pHead = pHead->pNextRdy;
+        currentTask->pNextRdy = NULL_PTR;
+        currentTask->state = APOS_TASK_RUNNING;
+        if (currentTask->TimeLeft < 1) {
+             currentTask->TimeLeft = currentTask->TimeSlice;
+        }
+    } else {
+        // This should not be reached if an idle task is implemented.
+        // For safety, hang here.
+        while(1);
     }
 
     return currentTask->pStack;
@@ -236,7 +227,7 @@ void APOS_NOP(void) {
 }
 
 APOS_TCB_STRUCT* APOS_GetCurrentTask(void) {
-    return pHead;
+    return currentTask;
 }
 
 void APOS_SetSchedulerPending(void) {
@@ -244,7 +235,7 @@ void APOS_SetSchedulerPending(void) {
 }
 
 void APOS_UpdateDelays(void) {
-
+  APOS_EnterCriticalRegion();
   for(uint8_t i=0; i < APOS_TASK_NR; i++) {
     if(TCB_Tasks[i].state == APOS_TASK_BLOCKED) {
         if(TCB_Tasks[i].delay > 0) {

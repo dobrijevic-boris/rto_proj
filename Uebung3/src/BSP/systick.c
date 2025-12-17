@@ -32,20 +32,15 @@ void SysTick_Handler (void)  {
   Debug_SwitchDebugPin(DEBUG_PIN_SYSTICK, Bit_SET);
   msTicks++;                                    // increment Tick-counter
  
+  APOS_UpdateDelays();
   APOS_TCB_STRUCT* currentTask = APOS_GetCurrentTask();
+  //update timeLeft active
   if(currentTask->TimeLeft > 0) {
       currentTask->TimeLeft--;
   }
 
-  if(currentTask->TimeLeft == 0){
-    // timeslice finished, find new spot in ready queue
-    APOS_INSERT_QUEUE(currentTask);
-  }
-  
-  APOS_UpdateDelays();  //update timeLeft active
-
   // check if task with higher priority is in running spot or timeslice is over
-  if (pHead != currentTask) {
+  if (pHead != currentTask || currentTask->TimeLeft == 0) {
 
     if(APOS_GetStatusRegion() == 0) {          
         // set PendSV
