@@ -42,15 +42,14 @@ void APOS_Init (void) {
 }
 
 void APOS_Start (void) {
-    if (pHead == 0) {
-        while(1); // Fatal error: No tasks to run.
+    // A task must be created and in the ready queue before starting.
+    if (pHead == NULL_PTR) {
+        // Fatal error: No tasks to run.
+        while(1);
     }
     
-    pHead->pStack = (uint32_t*)pHead->pStack + 16;
-    uint32_t pc =*((uint32_t*)pHead->pStack-2);
-    // switch to currentTask
-    __set_PSP((uint32_t)pHead->pStack);  // PSP zeigt ans Ende des Arrays
-    APOS_set_ctrl_pc(pc);
+    // The scheduler will select the first task.
+    APOS_Scheduler();
 }
 
 void APOS_INSERT_QUEUE(APOS_TCB_STRUCT* pTask) {
@@ -106,9 +105,9 @@ void APOS_TASK_Create (
 
     // place task in ready queue if ready
     if (pTask->state == APOS_TASK_READY) { 
-        APOS_EnterCriticalRegion();
+        //APOS_EnterCriticalRegion();
         APOS_INSERT_QUEUE(pTask);
-        APOS_ExitCriticalRegion();
+        //APOS_ExitCriticalRegion();
     }
     
     // Init stack
@@ -138,7 +137,9 @@ void APOS_TASK_Create (
 
 uint32_t* APOS_Select_next_task(uint32_t *sp) {
     
-    APOS_AssertStackGuard(pHead->pStackEnd);
+    APOS_AssertStackGuard(TCB_Tasks[currentTask].pStackEnd);
+    
+    APOS_AssertStackGuard(TCB_Tasks[currentTask].pStackEnd);
     
     // Save previous task's stack pointer, if there was one
     if (currentTask != NULL_PTR) {
@@ -202,11 +203,9 @@ void APOS_TaskDelay(uint32_t ticks) {
 void APOS_EnterCriticalRegion(void) {
     __disable_irq();
     criticalSectionCnt++;
-    __enable_irq();
 }
 
 void APOS_ExitCriticalRegion(void) {
-    __disable_irq();
     if (criticalSectionCnt > 0) {
         criticalSectionCnt--;
     }
@@ -258,8 +257,8 @@ static void APOS_StackCorrupted(void)
     }
 }
 
-static inline void APOS_AssertStackGuard(const void *pStack) {
-    
+static inline void APOS_AssertStackGuard(const void *pStack)
+{
     const uint32_t *p = (const uint32_t *)pStack;
     const uint32_t *g = (const uint32_t *)APOS_STACK_GUARD;
 
