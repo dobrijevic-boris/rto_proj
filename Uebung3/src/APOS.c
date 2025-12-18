@@ -52,6 +52,7 @@ void APOS_Start (void) {
     
     pCurrentTask = pHead;
     APOS_RemoveFromReadyQueue(pCurrentTask); // dequeue from ready queue
+    pCurrentTask->state = APOS_TASK_RUNNING; // set task as running
     
     pCurrentTask->pStack = (uint32_t*)pCurrentTask->pStack + 16;
     uint32_t pc = *((uint32_t*)pCurrentTask->pStack-2);
@@ -218,9 +219,9 @@ void APOS_TaskDelay(uint32_t ticks) {
     pCurrentTask->delay = ticks;
     pCurrentTask->state = APOS_TASK_BLOCKED;
     
-    APOS_Scheduler(); // Yield the CPU
-    
     APOS_ExitCriticalRegion();
+    
+    APOS_Scheduler(); // Yield the CPU
 }
 
 void APOS_EnterCriticalRegion(void) {
