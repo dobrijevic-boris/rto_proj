@@ -48,11 +48,11 @@ static void MandelBrot (void)
 							Z_im = 2*Z_re*Z_im + c_im;
 							Z_re = Z_re2 - Z_im2 + c_re;
 					}
-                    APOS_EnterCriticalRegion();
+                    //APOS_EnterCriticalRegion();
                     //Debug_SwitchDebugPin(DEBUG_PIN_TASKMANDELBROT, Bit_SET);
 					if(isInside) { Tft_DrawPixel(y, x + OFFSET); }
                     //Debug_SwitchDebugPin(DEBUG_PIN_TASKMANDELBROT, Bit_RESET);
-                    APOS_ExitCriticalRegion();     
+                    // APOS_ExitCriticalRegion();     
 			}
 	}
 } 

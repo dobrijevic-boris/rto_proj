@@ -42,6 +42,7 @@ struct APOS_TCB_STRUCT {
 // --- external globals
 extern APOS_TCB_STRUCT TCB_Tasks[];
 extern APOS_TCB_STRUCT* pHead;
+extern uint8_t systemInit;
 
 
 // ========== asm functions ==========
@@ -96,5 +97,6 @@ void APOS_SetSchedulerPending(void);
 void APOS_UpdateDelays(void);
 
 void APOS_UpdateTimeLeft(void);
+
 #endif
     

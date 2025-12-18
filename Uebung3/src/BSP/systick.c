@@ -1,12 +1,12 @@
 /**
-  ******************************************************************************
-  * @file    systick.c 
-  * @author  Josef Langer
-  * @version V1.0
-  * @date    24.11.2017
-  * @brief   SysTick Timer Handling, 
-  ******************************************************************************
-  */
+******************************************************************************
+* @file    systick.c 
+* @author  Josef Langer
+* @version V1.0
+* @date    24.11.2017
+* @brief   SysTick Timer Handling, 
+******************************************************************************
+*/
 
 /* Includes ------------------------------------------------------------------*/	
 #include <stdint.h>
@@ -28,29 +28,34 @@ static uint32_t msTicks;      		// Counts 1ms timeTicks
 * Return:     (none)
 *----------------------------------------------------------------------------*/
 void SysTick_Handler (void)  {
-  
-  Debug_SwitchDebugPin(DEBUG_PIN_SYSTICK, Bit_SET);
-  msTicks++;                                    // increment Tick-counter
- 
-  APOS_UpdateDelays();
-  APOS_TCB_STRUCT* currentTask = APOS_GetCurrentTask();
-  //update timeLeft active
-  if(currentTask->TimeLeft > 0) {
-      currentTask->TimeLeft--;
-  }
 
-  // check if task with higher priority is in running spot or timeslice is over
-  if (pHead != currentTask || currentTask->TimeLeft == 0) {
-
-    if(APOS_GetStatusRegion() == 0) {          
-        // set PendSV
-        SCB->ICSR = SCB->ICSR | (1<<28);
-    } else {
-        APOS_SetSchedulerPending();
+    Debug_SwitchDebugPin(DEBUG_PIN_SYSTICK, Bit_SET);
+    msTicks++;                                    // increment Tick-counter
+    
+    if(!systemInit){
+        Debug_SwitchDebugPin(DEBUG_PIN_SYSTICK, Bit_RESET);
+        return;
     }
-  }
-  
-  Debug_SwitchDebugPin(DEBUG_PIN_SYSTICK, Bit_RESET);
+
+    APOS_UpdateDelays();
+    APOS_TCB_STRUCT* pCurrentTask = APOS_GetCurrentTask();
+    //update timeLeft active
+    if(pCurrentTask->TimeLeft > 0) {
+        pCurrentTask->TimeLeft--;
+    }
+
+    // check if task with higher priority is in running spot or timeslice is over
+    if (pHead->Priority > pCurrentTask->Priority || pCurrentTask->TimeLeft == 0) {
+        
+        if(APOS_GetStatusRegion() == 0) {          
+            // set PendSV
+            SCB->ICSR = SCB->ICSR | (1<<28);
+        } else {
+            APOS_SetSchedulerPending();
+        }
+    }
+
+    Debug_SwitchDebugPin(DEBUG_PIN_SYSTICK, Bit_RESET);
 }
 
 /*-------------------------------------------------------------------------------
@@ -59,7 +64,7 @@ void SysTick_Handler (void)  {
 * Return:     (none)
 *------------------------------------------------------------------------------*/
 void Tick_InitSysTick(void){
-	SysTick_Config(SystemCoreClock/1000);      /* Generate interrupt each 1 ms  */
+    SysTick_Config(SystemCoreClock/1000);      /* Generate interrupt each 1 ms  */
 }
 
 /*-----------------------------------------------------------------------------
@@ -68,9 +73,5 @@ void Tick_InitSysTick(void){
 * Return:     (uint32_t msTicks)
 *----------------------------------------------------------------------------*/
 uint32_t SysTick_GetTicks(void) {
-  return msTicks;
+    return msTicks;
 }
-
-
-
-
