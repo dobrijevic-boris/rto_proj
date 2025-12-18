@@ -12,6 +12,7 @@
 #include "BSP/TftDisplay.h"
 #include "BSP/Debug.h"
 #include "BSP/Key.h"
+#include "BSP/Led.h"
 #include "StdDef.h"
 #include "TaskKey.h"
 #include "StdDef.h"
@@ -28,11 +29,14 @@ void TaskKey (void)
         // change color when key pressed
         if(keyState_User0) {
             Tft_SetForegroundColourRgb16(TFT_COLOR_PURPLE);
+            APOS_SignalEvent(&TCB_Tasks[TASK_LED], EVENT_LED_WKUP);
         }
         else if(keyState_User1) {
             Tft_SetForegroundColourRgb16(TFT_COLOR_DARK_GREEN);
+            APOS_SignalEvent(&TCB_Tasks[TASK_LED], EVENT_LED_WKUP);
         } else if(keyState_WakeUp) {
             Tft_SetForegroundColourRgb16(TFT_COLOR_RED);
+            APOS_SignalEvent(&TCB_Tasks[TASK_LED], EVENT_LED_WKUP);
         }
         // draw key state (split into three separate critical regions to limit max cs time
         char buf[32];   // buffer for text

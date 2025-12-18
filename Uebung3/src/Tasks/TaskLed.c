@@ -57,7 +57,7 @@ void TaskLed (void)
                 break;
         }
         Debug_SwitchDebugPin(DEBUG_PIN_TASKLED, Bit_RESET);
-        APOS_TaskDelay(100);
+        APOS_WaitEvent(EVENT_LED_WKUP);
     }
 }
 
