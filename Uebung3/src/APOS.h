@@ -4,7 +4,7 @@
 #include <stdint.h>
 #define APOS_TASK_STACK_SZ (uint32_t)256
 
-
+typedef uint32_t APOS_TASKEVENT;
 // enum for tasks
 typedef enum {
     TASK_COUNTER = 0,
@@ -21,6 +21,7 @@ typedef enum {
     APOS_TASK_READY=0,
     APOS_TASK_RUNNING,
     APOS_TASK_BLOCKED,
+    APOS_TASK_WAITING_EVENT,
     APOS_TASK_SUSPENDED
 } APOS_TASK_STATE;
 
@@ -36,6 +37,8 @@ struct APOS_TCB_STRUCT {
     APOS_TASK_STATE state;
     uint32_t delay; // in ticks (1ms)
     uint32_t TimeLeft; // time left running in ticks (ms)
+    APOS_TASKEVENT events;
+    APOS_TASKEVENT waitForEvents;
     struct APOS_TCB_STRUCT* pNextRdy;
 };
 
@@ -62,6 +65,9 @@ void APOS_Start (void);
 // Call SVC
 void APOS_Scheduler(void); 
 
+APOS_TASKEVENT APOS_ClearEvents(APOS_TCB_STRUCT* pTask);
+APOS_TASKEVENT APOS_WaitEvent(APOS_TASKEVENT eventMask);
+void APOS_SignalEvent(APOS_TCB_STRUCT* pTask, APOS_TASKEVENT event);
 // select the next task to run
 uint32_t* APOS_Select_next_task(uint32_t *sp); 
 

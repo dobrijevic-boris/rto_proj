@@ -294,3 +294,64 @@ static inline void APOS_AssertStackGuard(const void *pStack) {
     }
     APOS_StackCorrupted();
 }
+
+APOS_TASKEVENT APOS_ClearEvents(APOS_TCB_STRUCT* pTask) {
+    if(pTask == NULL_PTR) {
+        return 0;
+    }
+    APOS_TASKEVENT actualEvents;
+    
+    APOS_EnterCriticalRegion();
+    
+    actualEvents = pTask->events;
+    pTask->events = 0;
+    
+    APOS_ExitCriticalRegion();
+    
+    return actualEvents;
+}
+// set waiting events for currentTask, if event already set
+APOS_TASKEVENT APOS_WaitEvent(APOS_TASKEVENT eventMask) {
+    APOS_TASKEVENT occurredEvents;
+    
+    APOS_EnterCriticalRegion();
+    // check if event already set
+    if((pCurrentTask->events & eventMask) == 0) {
+        // event not signaled yet -> set to wait
+        pCurrentTask->waitForEvents = eventMask;
+        pCurrentTask->state = APOS_TASK_WAITING_EVENT;
+    
+        APOS_ExitCriticalRegion();
+        APOS_Scheduler();
+        // re-enter after waking up
+        APOS_EnterCriticalRegion();
+    }
+    occurredEvents = pCurrentTask->events;
+    pCurrentTask->events = 0;
+    
+    APOS_ExitCriticalRegion();
+    
+    return occurredEvents;
+}
+void APOS_SignalEvent(APOS_TCB_STRUCT* pTask, APOS_TASKEVENT event) {
+    
+    if(pTask == NULL_PTR) {
+        return;
+    }
+    APOS_EnterCriticalRegion();
+    // mark task event
+    pTask->events |= event;
+    if(pTask->state == APOS_TASK_WAITING_EVENT) {
+        if((pTask->events & pTask->waitForEvents) != 0) {
+            // wake up task
+            pTask->waitForEvents = 0;
+            pTask->state = APOS_TASK_READY;
+            APOS_INSERT_QUEUE(pTask);
+            // if wake up task is highest prio, call scheduler
+            if(pHead == pTask) {
+                APOS_SetSchedulerPending();
+            }
+        }
+    }
+    APOS_ExitCriticalRegion();
+}
