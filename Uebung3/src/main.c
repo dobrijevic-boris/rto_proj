@@ -59,12 +59,12 @@ int main(void) {
     
     initStack(); // init stack to 0xFF for simpler debugging
     APOS_Init();
-    APOS_TASK_Create(&TCB_Tasks[TASK_COUNTER],    "Counter",    200, TaskCounter,    taskStacks[TASK_COUNTER],    APOS_TASK_STACK_SZ, TASK_COUNTER_TMSLC, APOS_TASK_READY, 0, TASK_COUNTER_TMSLC);
-    APOS_TASK_Create(&TCB_Tasks[TASK_KEY],        "Key",        100, TaskKey,        taskStacks[TASK_KEY],        APOS_TASK_STACK_SZ, TASK_TMSLC,         APOS_TASK_READY, 0, 0);
-    APOS_TASK_Create(&TCB_Tasks[TASK_LED],        "Led",        100, TaskLed,        taskStacks[TASK_LED],        APOS_TASK_STACK_SZ, TASK_TMSLC,         APOS_TASK_READY, 0, 0);
+    APOS_TASK_Create(&TCB_Tasks[TASK_COUNTER],    "Counter",    100, TaskCounter,    taskStacks[TASK_COUNTER],    APOS_TASK_STACK_SZ, TASK_COUNTER_TMSLC, APOS_TASK_READY, 0, TASK_COUNTER_TMSLC);
+    APOS_TASK_Create(&TCB_Tasks[TASK_KEY],        "Key",        200, TaskKey,        taskStacks[TASK_KEY],        APOS_TASK_STACK_SZ, TASK_TMSLC,         APOS_TASK_READY, 0, 0);
+    APOS_TASK_Create(&TCB_Tasks[TASK_LED],        "Led",        200, TaskLed,        taskStacks[TASK_LED],        APOS_TASK_STACK_SZ, TASK_TMSLC,         APOS_TASK_READY, 0, 0);
     APOS_TASK_Create(&TCB_Tasks[TASK_MANDELBROT], "Mandelbrot", 100, TaskMandelbrot, taskStacks[TASK_MANDELBROT], APOS_TASK_STACK_SZ, TASK_TMSLC,         APOS_TASK_READY, 0, 0);
-    APOS_TASK_Create(&TCB_Tasks[TASK_POTI],       "Poti",       100, TaskPoti,       taskStacks[TASK_POTI],       APOS_TASK_STACK_SZ, TASK_TMSLC,         APOS_TASK_READY, 0, 0);
-    APOS_TASK_Create(&TCB_Tasks[TASK_WATCH],      "Watch",      100, TaskWatch,      taskStacks[TASK_WATCH],      APOS_TASK_STACK_SZ, TASK_TMSLC,         APOS_TASK_READY, 0, 0);
+    APOS_TASK_Create(&TCB_Tasks[TASK_POTI],       "Poti",       200, TaskPoti,       taskStacks[TASK_POTI],       APOS_TASK_STACK_SZ, TASK_TMSLC,         APOS_TASK_READY, 0, 0);
+    APOS_TASK_Create(&TCB_Tasks[TASK_WATCH],      "Watch",      200, TaskWatch,      taskStacks[TASK_WATCH],      APOS_TASK_STACK_SZ, TASK_TMSLC,         APOS_TASK_READY, 0, 0);
     APOS_TASK_Create(&TCB_Tasks[TASK_NOP],        "NOP",          0, APOS_NOP,       taskStacks[TASK_NOP],        APOS_TASK_STACK_SZ, TASK_TMSLC,         APOS_TASK_READY, 0, 0);
    
     __enable_irq();

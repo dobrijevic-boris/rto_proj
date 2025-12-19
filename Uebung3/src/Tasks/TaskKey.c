@@ -58,7 +58,7 @@ void TaskKey (void)
         
         
         Debug_SwitchDebugPin(DEBUG_PIN_TASKKEY, Bit_RESET);
-        APOS_TaskDelay(20);
+        APOS_TaskDelay(100);
     }
   
 }

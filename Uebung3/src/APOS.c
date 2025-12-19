@@ -33,6 +33,8 @@ static void TCB_Init(void) {
         TCB_Tasks[i].TimeLeft   = 0;
         TCB_Tasks[i].TimeSlice  = 0;
         TCB_Tasks[i].delay      = 0;
+        TCB_Tasks[i].events     = 0;
+        TCB_Tasks[i].waitForEvents = 0;
         TCB_Tasks[i].pNextRdy   = NULL_PTR;
     }
 }
