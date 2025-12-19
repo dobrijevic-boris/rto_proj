@@ -196,7 +196,8 @@ Bei sehr vielen Tasks könnte dies die Zeit, die innerhalb critical sections Sek
 \section{Aufgabe B: Einbau eines Stack-Checkers}
 
 Der Stackguard wird bei jedem Taskswitch geprüft.
-Als Stackguard wird ein 8-Byte-String verwendet, der bei der Initialisierung an das Ende jedes Taskstacks geschrieben wird: \#define APOS\_STACK\_GUARD "STACKEND".\\
+Als Stackguard wird ein 8-Byte-String verwendet, der bei der Initialisierung an das Ende jedes Taskstacks geschrieben wird:
+\begin{verbatim} #define APOS_STACK_GUARD "STACKEND" \end{verbatim}
 
 \textbf{Stackguard Messung:}\\
 \includegraphics[width=1\textwidth]{Images/StackguardMessung.png}\\
@@ -217,26 +218,85 @@ Im Fehlerfall entsteht ein zusätzlicher Laufzeit-Overhead, der jedoch keine pra
 \textbf{Fehlerfall}\\
 Händische Änderung des Stackguards:\\
 \includegraphics[width=1\textwidth]{Images/StackguardCorrupted.png}\\\\
-\includegraphics[width=1\textwidth]{Images/StackguardFunction.png}\\
+\includegraphics[width=0.9\textwidth]{Images/StackguardFunction.png}\\
 
 Der Stack-Guard funktioniert wie vorgesehen. Bei einer Veränderung des Stack-Guards wird die Funktion APOS\_StackCorrupted() aufgerufen, woraufhin die Applikation in einer Endlosschleife verbleibt.
+
+
+
+\section{Aufgabe C: Task-Event-Handling}
+
+\subsection{TaskLed und TaskKey}
+
+Task Led wird nach jedem Tastendruck in WaitingEvent state versetzt:
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=0.7\linewidth]{Images/TaskLed}
+	\caption{Task Led APOS Event}
+	\label{fig:taskled}
+\end{figure}
+
+Bei Tastendruck (beliebige Taste) wird Event an TaskLed geschickt. Gedrückthalten der Taste lässt das Lauflicht in 100ms Takt laufen:
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=0.7\linewidth]{Images/TaskKey}
+	\caption{TaskKey: Signalisiert Event für TaskLed}
+	\label{fig:taskkey}
+\end{figure}
+
+\subsection{Erweiterung APOS Events}
+
+Der TCB wird um die 32-bit Bitmasken events und waitForEvents erweitert.
+Mit events werden durch APOS\_SignalEvent signalisierte Tasks registriert.
+Mit waitForEvents wird mit der Funktion APOS\_WaitEvent(..) registriert, durch welche Events der Task aufgeweckt werden kann.
+
+Wird ein Signal registriert wird es in der events maske gesetzt und es wird geprüft, ob der Task auf ein Event wartet (state APOS\_TASK\_WAITING\_EVENT) und ob das signalisierte event in der gespeicherten WaitForEvents maske enthalten ist.
+ 
+In diesem Fall wird der Task auf Status ready gesetzt und in die Ready queue aufgenommen. Falls der aufgeweckte Task an Spitze der ready queue ist und höhere Priorität als der derzeitige Task hat, wird ebenfalls ein TaskSwitch ausgeführt.
+ 
+In der APOS\_WaitEvent Funktion wird die bitmaske zum aufwecken des Tasks übergeben. Der Task wird in den State APOS\_TASK\_WAITING\_EVENT versetzt und erst wieder aufgeweckt, wenn anderer Task das entsprechende Event auslöst.
+Nach aufwecken wird die eventmaske zurückgegeben und gelöscht.
+
+Mit der APOS\_ClearEvents Funktion wird die Eventmaske des Tasks gelöscht. Die gelöschten Events werden als Rückgabewert übergeben.
+
+Zur Vermeidung von Raceconditions sind diese Funktionen mit Criticalsections versehen.  
+
+\subsection{Vorteile / Nachteile der Implementierung}
+
+Vorteile der Implementierung:
+\begin{itemize}
+	\item Nutzung von bitmasken einfach zu implementieren
+	\item Jeder Task besitzt Möglichkeit auf bis zu 32 Events zu warten, mit wenig Overhead (2x 32bit maske) pro Task.
+	\item Event kann durch beliebige Tasks ausgelöst werden. TaskLed ist von Auslöser des Events entkoppelt.
+\end{itemize}
+
+Nachteile der Implementierung:
+\begin{itemize}
+	\item Keine Queue für Events: werden bis zum Aufwecken des Tasks mehrere Events ausgelöst, wird dies nur einmalig registriert.
+	\item Gefahr von Deadlocks: Die derzeitige Implementierung verhindert nicht, dass Deadlocks auftreten können falls Tasks auf ein Event des jeweils anderen Tasks warten.
+	\item Scheduler Priorität entscheidend: Ist die Priorität des aufgeweckten Tasks niedriger als die des ausführenden Tasks, wird der Task trotz Event nicht sofort ausgeführt (kann auch als Vorteil interpretiert werden).
+\end{itemize}
 
 % #################################################################################################
 %      Quellcode
 % #################################################################################################
 \clearpage
 \section{Quellcode}
-% \subsection{main.c}
-% \lstinputlisting{../../Uebung2/src/main.c}
-% \subsection{APOS.h}
-% \lstinputlisting{../../Uebung2/src/APOS.h}
-% \subsection{APOS.c}
-% \lstinputlisting{../../Uebung2/src/APOS.c}
-% \subsection{APOS.s}
-% \lstinputlisting{../../Uebung2/src/APOS.s}
-% \subsection{systick.h}
-% \lstinputlisting{../../Uebung2/src/BSP/systick.h}
-% \subsection{systick.c}
-% \lstinputlisting{../../Uebung2/src/BSP/systick.c}
+ \subsection{main.c}
+ \lstinputlisting{../../Uebung3/src/main.c}
+ \subsection{APOS.h}
+ \lstinputlisting{../../Uebung3/src/APOS.h}
+ \subsection{APOS.c}
+ \lstinputlisting{../../Uebung3/src/APOS.c}
+ \subsection{TaskKey.h}
+ \lstinputlisting{../../Uebung3/src/Tasks/TaskKey.h}
+ \subsection{TaskKey.c}
+ \lstinputlisting{../../Uebung3/src/Tasks/TaskKey.c}
+ \subsection{TaskLed.h}
+ \lstinputlisting{../../Uebung3/src/Tasks/TaskLed.h}
+ \subsection{TaskLed.c}
+ \lstinputlisting{../../Uebung3/src/Tasks/TaskLed.c}
+
 
 \end{document}

@@ -350,7 +350,7 @@ void APOS_SignalEvent(APOS_TCB_STRUCT* pTask, APOS_TASKEVENT event) {
             pTask->state = APOS_TASK_READY;
             APOS_INSERT_QUEUE(pTask);
             // if wake up task is highest prio, call scheduler
-            if(pHead == pTask) {
+            if((pHead == pTask) && (pCurrentTask->Priority < pTask->Priority)) {
                 APOS_SetSchedulerPending();
             }
         }
