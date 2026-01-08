@@ -29,6 +29,7 @@ typedef struct APOS_TCB_STRUCT APOS_TCB_STRUCT;
 struct APOS_TCB_STRUCT {
     char const* pTaskName;
     uint32_t Priority;
+    uint32_t basePriority;
     void (*pRoutine)(void);
     void * pStack;
     void * pStackEnd;
@@ -42,6 +43,11 @@ struct APOS_TCB_STRUCT {
     struct APOS_TCB_STRUCT* pNextRdy;
 };
 
+typedef struct {
+    uint8_t counter;
+    APOS_TCB_STRUCT* pOwner;
+    APOS_TCB_STRUCT* pWaitList;
+}APOS_MUTEX;
 // --- external globals
 extern APOS_TCB_STRUCT TCB_Tasks[];
 extern APOS_TCB_STRUCT* pHead;
@@ -79,7 +85,7 @@ void APOS_INSERT_QUEUE(APOS_TCB_STRUCT* pTask);
 void APOS_TASK_Create ( 
     APOS_TCB_STRUCT* pTask, // TaskControlBlock
     const char* pTaskName, // Task Name nur fuer DebugZwecke
-    uint32_t Priority, // Prioritaet des Tasks (vorerst nicht in Verwendung)
+    uint32_t Priority, // Prioritaet des Tasks (kann kurzzeitig durch Mutex erhoeht werden)
     void (*pRoutine)(void), // Startadresse Task (ROM)
     void * pStack, // Startadresse Stack des Tasks (RAM)
     uint32_t StackSize, // Groesse des Stacks
@@ -103,6 +109,12 @@ void APOS_SetSchedulerPending(void);
 void APOS_UpdateDelays(void);
 
 void APOS_UpdateTimeLeft(void);
+
+
+// Mutex functions
+void APOS_MUTEX_Create(APOS_MUTEX* pMutex);
+void APOS_MUTEX_LockBlocked(APOS_MUTEX* pMutex);
+void APOS_MUTEX_Unlock(APOS_MUTEX* pMutex);
 
 #endif
     
