@@ -86,7 +86,6 @@ void APOS_TASK_Create (
     APOS_TCB_STRUCT* pTask, // TaskControlBlock
     const char* pTaskName, // Task Name nur fuer DebugZwecke
     uint32_t Priority, // Prioritaet des Tasks (kann kurzzeitig durch Mutex erhoeht werden)
-    uint32_t basePriority, // base Prioritaet des Tasks
     void (*pRoutine)(void), // Startadresse Task (ROM)
     void * pStack, // Startadresse Stack des Tasks (RAM)
     uint32_t StackSize, // Groesse des Stacks
