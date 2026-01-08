@@ -42,7 +42,6 @@ static void initStack(void) {
     }
 }
 
-
 int main(void) {
     
     
@@ -67,6 +66,7 @@ int main(void) {
     APOS_TASK_Create(&TCB_Tasks[TASK_WATCH],      "Watch",      200, TaskWatch,      taskStacks[TASK_WATCH],      APOS_TASK_STACK_SZ, TASK_TMSLC,         APOS_TASK_READY, 0, 0);
     APOS_TASK_Create(&TCB_Tasks[TASK_NOP],        "NOP",          0, APOS_NOP,       taskStacks[TASK_NOP],        APOS_TASK_STACK_SZ, TASK_TMSLC,         APOS_TASK_READY, 0, 0);
    
+    
     __enable_irq();
     APOS_Start();
     
