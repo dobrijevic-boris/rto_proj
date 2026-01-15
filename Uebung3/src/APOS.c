@@ -398,8 +398,6 @@ void APOS_MUTEX_Unlock(APOS_MUTEX* pMutex) {
     
     pMutex->counter--;
     if(pMutex->counter == 0) {
-        // if task in waiting list -> set new owner, NULL_PTR else
-        pMutex->pOwner = APOS_MUTEX_PopWaitingQueue(); // TODO pop first element in WaitingList, return null ptr if none in waiting list
         // wake next in waiting list
         APOS_MUTEX_WakeTask(pMutex);
         // reset base priority
@@ -407,4 +405,10 @@ void APOS_MUTEX_Unlock(APOS_MUTEX* pMutex) {
         APOS_Scheduler();
     }
     APOS_ExitCriticalRegion();
+}
+
+
+static APOS_TCB_STRUCT* APOS_MUTEX_WakeTask(pMutex) {
+    // pop waiting list
+    pMutex->
 }
