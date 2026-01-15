@@ -18,6 +18,8 @@
 #include "StdDef.h"
 #include <stdio.h>
 #include "APOS.h"
+#include "TaskAll.h"
+
 void TaskKey (void)
 {
     while(1) {
@@ -38,23 +40,24 @@ void TaskKey (void)
             Tft_SetForegroundColourRgb16(TFT_COLOR_RED);
             APOS_SignalEvent(&TCB_Tasks[TASK_LED], EVENT_LED_WKUP);
         }
-        // draw key state (split into three separate critical regions to limit max cs time
+        // draw key state
         char buf[32];   // buffer for text
         snprintf(buf, sizeof(buf), "User0:%d", keyState_User0);
-        APOS_EnterCriticalRegion();
-        Tft_DrawString(10, 18 + 1 * 24, buf);
-        APOS_ExitCriticalRegion();
         
-        APOS_EnterCriticalRegion();
+        APOS_MUTEX_LockBlocked(&mutexTft);
+        Tft_DrawString(10, 18 + 1 * 24, buf);
+        APOS_MUTEX_Unlock(&mutexTft);
+        
         snprintf(buf, sizeof(buf), "User1:%d", keyState_User1);
         
+        APOS_MUTEX_LockBlocked(&mutexTft);
         Tft_DrawString(60, 18 + 1 * 24, buf);
-        APOS_ExitCriticalRegion();
+        APOS_MUTEX_Unlock(&mutexTft);
         
-        APOS_EnterCriticalRegion();
         snprintf(buf, sizeof(buf), "Wakeup:%d", keyState_WakeUp);
+        APOS_MUTEX_LockBlocked(&mutexTft);        
         Tft_DrawString(120, 18 + 1 * 24, buf);
-        APOS_ExitCriticalRegion();
+        APOS_MUTEX_Unlock(&mutexTft);
         
         
         Debug_SwitchDebugPin(DEBUG_PIN_TASKKEY, Bit_RESET);

@@ -7,5 +7,8 @@
 #include "TaskCounter.h"
 #include "TaskPoti.h"
 #include "TaskLed.h"
+#include "APOS.h"
+
+extern APOS_MUTEX mutexTft;
 
 #endif

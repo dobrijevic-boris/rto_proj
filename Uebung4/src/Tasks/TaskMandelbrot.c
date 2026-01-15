@@ -12,6 +12,7 @@
 #include "StdDef.h"
 #include "TaskMandelbrot.h"
 #include "APOS.h"
+#include "TaskAll.h"
 // Quelle Algorithmus Mandelbrot: http://warp.povusers.org/Mandelbrot/ 
 
 #define ImageHeight 150
@@ -48,28 +49,33 @@ static void MandelBrot (void)
 							Z_im = 2*Z_re*Z_im + c_im;
 							Z_re = Z_re2 - Z_im2 + c_re;
 					}
-                    //APOS_EnterCriticalRegion();
-                    //Debug_SwitchDebugPin(DEBUG_PIN_TASKMANDELBROT, Bit_SET);
-					if(isInside) { Tft_DrawPixel(y, x + OFFSET); }
-                    //Debug_SwitchDebugPin(DEBUG_PIN_TASKMANDELBROT, Bit_RESET);
-                    // APOS_ExitCriticalRegion();     
+                    
+					if(isInside) { 
+                        APOS_MUTEX_LockBlocked(&mutexTft);
+                        Tft_DrawPixel(y, x + OFFSET); 
+                        APOS_MUTEX_Unlock(&mutexTft);
+                    }
 			}
 	}
 } 
 void TaskMandelbrot (void)
 {
     BOOL toggle = FALSE;    // toggle color state BLACK/BLUE
+    APOS_MUTEX_LockBlocked(&mutexTft);
 	Tft_DrawString(10, 18+5*24, "MandelBrot ");
+    APOS_MUTEX_Unlock(&mutexTft);
     while(1) {
         
         Debug_SwitchDebugPin(DEBUG_PIN_TASKMANDELBROT, Bit_SET);
         MandelBrot();
         Debug_SwitchDebugPin(DEBUG_PIN_TASKMANDELBROT, Bit_RESET);
+        APOS_MUTEX_LockBlocked(&mutexTft);
         if(toggle) {
             Tft_SetForegroundColourRgb16(TFT_COLOR_BLACK);
         } else {
             Tft_SetForegroundColourRgb16(TFT_COLOR_BLUE);
         }
+        APOS_MUTEX_Unlock(&mutexTft);
         toggle = !toggle;
     }       
 }

@@ -82,6 +82,9 @@ void APOS_TaskDelay(uint32_t ticks);
 // inserts task into ready queue
 void APOS_INSERT_QUEUE(APOS_TCB_STRUCT* pTask);
 
+// inserts task into a sorted list
+void APOS_List_Insert(APOS_TCB_STRUCT** ppHead, APOS_TCB_STRUCT* pTask);
+
 void APOS_TASK_Create ( 
     APOS_TCB_STRUCT* pTask, // TaskControlBlock
     const char* pTaskName, // Task Name nur fuer DebugZwecke
@@ -110,11 +113,18 @@ void APOS_UpdateDelays(void);
 
 void APOS_UpdateTimeLeft(void);
 
-
 // Mutex functions
 void APOS_MUTEX_Create(APOS_MUTEX* pMutex);
+
+void APOS_MUTEX_InsertQueue(APOS_MUTEX* pMutex);
+
 void APOS_MUTEX_LockBlocked(APOS_MUTEX* pMutex);
+
 void APOS_MUTEX_Unlock(APOS_MUTEX* pMutex);
+
+APOS_TCB_STRUCT* APOS_MUTEX_PopWaitingQueue(APOS_MUTEX* pMutex);
+
+void APOS_MUTEX_WakeTask(APOS_MUTEX* pMutex);
 
 #endif
     

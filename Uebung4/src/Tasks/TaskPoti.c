@@ -16,6 +16,7 @@
 #include "TaskPoti.h"
 #include <stdio.h>
 #include "APOS.h"
+#include "TaskAll.h"
 
 #define TFT_BUF_SZ 20 // buffersize for tft message
 
@@ -30,9 +31,9 @@ void TaskPoti (void)
         char buf[TFT_BUF_SZ];
         snprintf(buf, sizeof(buf), "Poti: %d mV", potiVal);
         
-        APOS_EnterCriticalRegion();
+        APOS_MUTEX_LockBlocked(&mutexTft);
         Tft_DrawString(10, 18+4*24, buf);
-        APOS_ExitCriticalRegion();
+        APOS_MUTEX_Unlock(&mutexTft);
         
         Debug_SwitchDebugPin(DEBUG_PIN_TASKPOTI, Bit_RESET);
         APOS_TaskDelay(100);

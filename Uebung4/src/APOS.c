@@ -171,8 +171,7 @@ void APOS_RemoveFromReadyQueue(APOS_TCB_STRUCT* pTask) {
     else{
         // safety catch
         while(1){}
-    }
-    
+    }   
 }
 
 uint32_t* APOS_Select_next_task(uint32_t *sp) {
@@ -264,6 +263,7 @@ void APOS_SetSchedulerPending(void) {
 }
 
 void APOS_UpdateDelays(void) {
+
     APOS_EnterCriticalRegion();
     for(uint8_t i=0; i < APOS_TASK_NR; i++) {
         if(TCB_Tasks[i].state == APOS_TASK_BLOCKED) {
@@ -300,9 +300,11 @@ static inline void APOS_AssertStackGuard(const void *pStack) {
 }
 
 APOS_TASKEVENT APOS_ClearEvents(APOS_TCB_STRUCT* pTask) {
+
     if(pTask == NULL_PTR) {
         return 0;
     }
+    
     APOS_TASKEVENT actualEvents;
     
     APOS_EnterCriticalRegion();
@@ -314,8 +316,10 @@ APOS_TASKEVENT APOS_ClearEvents(APOS_TCB_STRUCT* pTask) {
     
     return actualEvents;
 }
+
 // set waiting events for currentTask, if event already set
 APOS_TASKEVENT APOS_WaitEvent(APOS_TASKEVENT eventMask) {
+
     APOS_TASKEVENT occurredEvents;
     
     APOS_EnterCriticalRegion();
@@ -337,11 +341,13 @@ APOS_TASKEVENT APOS_WaitEvent(APOS_TASKEVENT eventMask) {
     
     return occurredEvents;
 }
+
 void APOS_SignalEvent(APOS_TCB_STRUCT* pTask, APOS_TASKEVENT event) {
     
     if(pTask == NULL_PTR) {
         return;
     }
+
     APOS_EnterCriticalRegion();
     // mark task event
     pTask->events |= event;
@@ -357,9 +363,9 @@ void APOS_SignalEvent(APOS_TCB_STRUCT* pTask, APOS_TASKEVENT event) {
             }
         }
     }
+
     APOS_ExitCriticalRegion();
 }
-
 
 void APOS_MUTEX_Create(APOS_MUTEX* pMutex) {
     
@@ -368,43 +374,97 @@ void APOS_MUTEX_Create(APOS_MUTEX* pMutex) {
     pMutex->pWaitList = NULL_PTR;
 }
 
+void APOS_MUTEX_InsertQueue(APOS_MUTEX* pMutex){
+
+    pCurrentTask->state = APOS_TASK_BLOCKED;    // Current task blocked
+
+    // Add to wait list (sorted by priority)
+    APOS_TCB_STRUCT* pCurrent = pMutex->pWaitList;
+    APOS_TCB_STRUCT* pPrev = NULL_PTR;
+
+    // Traverse list to find insertion point. Higher number = higher priority.
+    while(pCurrent != NULL_PTR && pCurrentTask->Priority <= pCurrent->Priority) {
+        pPrev = pCurrent;
+        pCurrent = pCurrent->pNextRdy;
+    }
+
+    pCurrentTask->pNextRdy = pCurrent;
+    if (pPrev == NULL_PTR) {
+        pMutex->pWaitList = pCurrentTask;
+    } 
+    else {
+        pPrev->pNextRdy = pCurrentTask;
+    }
+}
+
 void APOS_MUTEX_LockBlocked(APOS_MUTEX* pMutex) {
+
     APOS_EnterCriticalRegion();
-    // if mutex not owned: lock mutex
+
     if(pMutex->counter == 0 && pMutex->pOwner != pCurrentTask) {
+        // if mutex not owned: lock mutex
         pMutex->pOwner = pCurrentTask;
         pMutex->counter++;
     }
-    // TODO mutex owned by other task: block task
-    // TODO set priority of owner task to higher prio if currentTask has higher priority
-    else if(pMutex->counter > 0 && pMutex->pOwner != pCurrentTask) {
-        // TODO functions set to waiting state and 
-        // TODO add to waiting list (use pNextReady in TCB) and 
+    else if(pMutex->counter > 0 && pMutex->pOwner != pCurrentTask) {    // mutex owned by other task: block task
+
         // Priority inheritance: set priority of current owner
         if(pMutex->pOwner->Priority < pCurrentTask->Priority) {
             pMutex->pOwner->Priority = pCurrentTask->Priority;
         }
+
+        APOS_MUTEX_InsertQueue(pMutex);
         APOS_Scheduler();
     }
-    // pCurrentTask == pOwner: recursive task
     else {
+        // pCurrentTask == pOwner: recursive task
         pMutex->counter++;
     }
+
     APOS_ExitCriticalRegion();
 }
 
 void APOS_MUTEX_Unlock(APOS_MUTEX* pMutex) {
+
     APOS_EnterCriticalRegion();
     
-    pMutex->counter--;
+    if (pMutex->counter > 0) {
+        pMutex->counter--;
+    }
+    
     if(pMutex->counter == 0) {
         // if task in waiting list -> set new owner, NULL_PTR else
-        pMutex->pOwner = APOS_MUTEX_PopWaitingQueue(); // TODO pop first element in WaitingList, return null ptr if none in waiting list
+        pMutex->pOwner = APOS_MUTEX_PopWaitingQueue(pMutex); 
         // wake next in waiting list
-        APOS_MUTEX_WakeTask(pMutex);
+        if (pMutex->pOwner != NULL_PTR) {
+            pMutex->counter = 1;
+            APOS_MUTEX_WakeTask(pMutex);
+        }
         // reset base priority
         pCurrentTask->Priority = pCurrentTask->basePriority;
         APOS_Scheduler();
     }
+
     APOS_ExitCriticalRegion();
+}
+
+APOS_TCB_STRUCT* APOS_MUTEX_PopWaitingQueue(APOS_MUTEX* pMutex) {
+
+    if (pMutex->pWaitList == NULL_PTR) {
+        return NULL_PTR;
+    }
+    
+    APOS_TCB_STRUCT* pTask = pMutex->pWaitList;
+    pMutex->pWaitList = pTask->pNextRdy;
+    pTask->pNextRdy = NULL_PTR;
+    
+    return pTask;
+}
+
+void APOS_MUTEX_WakeTask(APOS_MUTEX* pMutex) {
+
+    if (pMutex->pOwner != NULL_PTR) {
+        pMutex->pOwner->state = APOS_TASK_READY;
+        APOS_INSERT_QUEUE(pMutex->pOwner);
+    }
 }

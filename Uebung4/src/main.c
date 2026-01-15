@@ -31,6 +31,7 @@
 #define TASK_TMSLC (uint32_t)100 // default 100ms time slice
 #define TASK_COUNTER_TMSLC (uint32_t)10 // 10ms time slice for task counter
 
+APOS_MUTEX mutexTft;
 static uint32_t taskStacks[APOS_TASK_NR][APOS_TASK_STACK_SZ] __attribute__((aligned(8)));
 
 static void initStack(void) {
@@ -58,6 +59,8 @@ int main(void) {
     
     initStack(); // init stack to 0xFF for simpler debugging
     APOS_Init();
+    APOS_MUTEX_Create(&mutexTft);
+
     APOS_TASK_Create(&TCB_Tasks[TASK_COUNTER],    "Counter",    100, TaskCounter,    taskStacks[TASK_COUNTER],    APOS_TASK_STACK_SZ, TASK_COUNTER_TMSLC, APOS_TASK_READY, 0, TASK_COUNTER_TMSLC);
     APOS_TASK_Create(&TCB_Tasks[TASK_KEY],        "Key",        200, TaskKey,        taskStacks[TASK_KEY],        APOS_TASK_STACK_SZ, TASK_TMSLC,         APOS_TASK_READY, 0, 0);
     APOS_TASK_Create(&TCB_Tasks[TASK_LED],        "Led",        200, TaskLed,        taskStacks[TASK_LED],        APOS_TASK_STACK_SZ, TASK_TMSLC,         APOS_TASK_READY, 0, 0);
