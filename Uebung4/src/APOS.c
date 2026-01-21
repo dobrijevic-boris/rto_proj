@@ -13,8 +13,8 @@ APOS_TCB_STRUCT TCB_Tasks[APOS_TASK_NR];
 APOS_TCB_STRUCT* pHead = NULL_PTR;           // pointer to first task in ready queue, NULL initialized
 uint8_t systemInit = 0;
 
+APOS_TCB_STRUCT* pCurrentTask = NULL_PTR;     // pointer to currently running task
 // --- static variables ---
-static APOS_TCB_STRUCT* pCurrentTask = NULL_PTR;     // pointer to currently running task
 static volatile uint32_t criticalSectionCnt = 0;
 static volatile BOOL schedulerPending = FALSE;
 static inline void APOS_AssertStackGuard(const void *pStack);
@@ -57,11 +57,7 @@ void APOS_Start (void) {
     APOS_RemoveFromReadyQueue(pCurrentTask); // dequeue from ready queue
     pCurrentTask->state = APOS_TASK_RUNNING; // set task as running
     
-    pCurrentTask->pStack = (uint32_t*)pCurrentTask->pStack + 16;
-    uint32_t pc = *((uint32_t*)pCurrentTask->pStack-2);
-    // switch to currentTask
-    __set_PSP((uint32_t)pCurrentTask->pStack);  // PSP zeigt ans Ende des Arrays
-    APOS_set_ctrl_pc(pc);
+    __asm volatile ("SVC 0");
 }
 
 void APOS_INSERT_QUEUE(APOS_TCB_STRUCT* pTask) {
@@ -208,10 +204,6 @@ uint32_t* APOS_Select_next_task(uint32_t *sp) {
 }
 
 void APOS_Scheduler(void) {
-    __asm volatile ("SVC 0");
-}
-
-void SVC_Handler(void) {
     SCB->ICSR |= SCB_ICSR_PENDSVSET_Msk;
 }
 

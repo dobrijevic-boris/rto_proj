@@ -5,14 +5,9 @@
   EXPORT PendSV_Handler
   IMPORT APOS_Select_next_task
  
-  EXPORT APOS_set_ctrl_pc
-
-APOS_set_ctrl_pc
-        ; pc and control done in one call
-        MOVS  r1, #2
-        MSR   CONTROL, r1 ; set control register 0x02
-        BX    r0 
-
+  EXPORT SVC_Handler
+  IMPORT pCurrentTask         ; Import the variable we exposed in C
+    
 PendSV_Handler
         MRS     r0, PSP          ; r0 = current PSP (thread context)
         BL      APOS_save_regs   ; r0 = PSP after saving r4 r11
@@ -23,6 +18,21 @@ PendSV_Handler
         MOV lr, r0
         BX  lr                   ; return
 
+SVC_Handler
+    ; 1. Load address of pCurrentTask
+    LDR     R1, =pCurrentTask
+    LDR     R2, [R1]          ; R2 = pointer to TCB struct
+    
+    ; 2. Load pStack from TCB (Offset 16 bytes: Name(4)+Prio(4)+Base(4)+Routine(4))
+    LDR     R0, [R2, #16]     ; R0 = pStack (passed as arg to restore_regs)
+    
+    ; 3. Call your existing restore function
+    BL      APOS_restore_regs ; Restores R4-R11 and sets PSP
+    
+    ; 4. Return to Thread Mode (Process Stack)
+    LDR     R0, =0xFFFFFFFD   
+    MOV     LR, R0
+    BX      LR
 
 APOS_save_regs
   ; r0: sp
