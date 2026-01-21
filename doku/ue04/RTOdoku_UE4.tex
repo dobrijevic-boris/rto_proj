@@ -127,6 +127,7 @@ Wenn ein Task blockiert werden muss, weil der Mutex belegt ist, wird geprüft, o
 Falls ja, wird dessen Priorität angehoben.
 Dadurch wird kein höchstpriorer Task von niedrigprioren blockiert.
 Der niedrigpriore Mutex-Hoder erhält die höhere Prio und darf arbeiten bis er fertig ist, anstatt von einem höheren unterbrochen zu werden.
+\clearpage
 
 \begin{lstlisting}[language=C, caption={Ausschnitt aus APOS\_MUTEX\_LockBlocked}]
 void APOS_MUTEX_LockBlocked(APOS_MUTEX* pMutex) {
@@ -179,6 +180,7 @@ void APOS_MUTEX_InsertQueue(APOS_MUTEX* pMutex){
     // ... Verpointerung aktualisieren ...
 }
 \end{lstlisting}
+\clearpage
 
 \subsubsection*{Mutex freigeben (Unlock)}
 Beim Entsperren (\texttt{APOS\_MUTEX\_Unlock}) wird der Zähler dekrementiert.
@@ -208,6 +210,7 @@ void APOS_MUTEX_Unlock(APOS_MUTEX* pMutex) {
     APOS_ExitCriticalRegion();
 }
 \end{lstlisting}
+\clearpage
 
 \subsection*{Vergleich: Mutex vs. Critical Section}
 
@@ -219,37 +222,42 @@ Jedoch kommt hier hinzu, dass beim Verlassen einer CS kein Scheduling erfolgen m
 Den größten Aufwand erzeugt hierbei die Leave Mutex Funktion, da hier in die Waiting Queue einsortiert werden muss.
 Das Eintreten in den Mutex läuft dabei relativ schnell, da nur das erste Element aus der Liste aufgerufen und entfern wird.
 
-Enter Critial Region: 1.232 us
-\includegraphics[width=.9\textwidth]{Images/criticalEnter.png}\\
+Enter Critial Region: 1.232 us\\
+\includegraphics[width=1\textwidth]{Images/criticalEnter.png}\\
 
-Exit Critial Region: 1.376 us
-\includegraphics[width=.9\textwidth]{Images/CriticalExit.png}\\
+Exit Critial Region: 1.376 us\\
+\includegraphics[width=1\textwidth]{Images/CriticalExit.png}\\
 
-Enter Mutex: 2.208 us
-\includegraphics[width=.9\textwidth]{Images/mutexLock.png}\\
+Enter Mutex: 2.208 us\\
+\includegraphics[width=1\textwidth]{Images/mutexLock.png}\\
 
-Exit Mutex: 6.964 us
-\includegraphics[width=.9\textwidth]{Images/mutexUnlock.png}\\
+Exit Mutex: 6.964 us\\
+\includegraphics[width=1\textwidth]{Images/mutexUnlock.png}\\
 
+
+\clearpage
+% =================================================================================================
+% Kapitel 2 ---------------------
+\section*{Aufgabe B -- Refaktoring und Verbesserung des Quellcodes}
 
 % #################################################################################################
 %      Quellcode
 % #################################################################################################
-\clearpage
+
 \section{Quellcode}
 \subsection{main.c}
-% \lstinputlisting{../../Uebung3/src/main.c}
-% \subsection{APOS.h}
-% \lstinputlisting{../../Uebung3/src/APOS.h}
-% \subsection{APOS.c}
-% \lstinputlisting{../../Uebung3/src/APOS.c}
-% \subsection{TaskKey.h}
-% \lstinputlisting{../../Uebung3/src/Tasks/TaskKey.h}
-% \subsection{TaskKey.c}
-% \lstinputlisting{../../Uebung3/src/Tasks/TaskKey.c}
-% \subsection{TaskLed.h}
-% \lstinputlisting{../../Uebung3/src/Tasks/TaskLed.h}
-% \subsection{TaskLed.c}
-% \lstinputlisting{../../Uebung3/src/Tasks/TaskLed.c}
+\lstinputlisting{../../Uebung4/src/main.c}
+\subsection{APOS.h}
+\lstinputlisting{../../Uebung4/src/APOS.h}
+\subsection{APOS.c}
+\lstinputlisting{../../Uebung4/src/APOS.c}
+\subsection{TaskKey.h}
+\lstinputlisting{../../Uebung4/src/Tasks/TaskKey.h}
+\subsection{TaskKey.c}
+\lstinputlisting{../../Uebung4/src/Tasks/TaskKey.c}
+\subsection{TaskLed.h}
+\lstinputlisting{../../Uebung4/src/Tasks/TaskLed.h}
+\subsection{TaskLed.c}
+\lstinputlisting{../../Uebung4/src/Tasks/TaskLed.c}
 
 \end{document}
