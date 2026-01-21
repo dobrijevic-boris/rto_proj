@@ -240,6 +240,26 @@ Exit Mutex: 6.964 us\\
 % Kapitel 2 ---------------------
 \section*{Aufgabe B -- Refaktoring und Verbesserung des Quellcodes}
 
+\subsection*{Task Poti Print}
+Updated Task Poti, damit Änderungen der Werte die Ausgabe direkt überschreiben (davor: bei Wechsel der Zeile von bspw 1000 zu 999 bleibt V von letzter Ausgabe auf Display -> mVV). Nun werden zusätzliche leerzeichen auf das Display ausgegeben und die Ausgabe ist korrekt.
+$ snprintf(buf, sizeof(buf), "Poti: %d mV  ", potiVal); $
+
+\subsection*{SVC Handler und APOS\_Start}
+
+Der unnötige Overhead durch den indirekten Aufruf des PendSv im APOS\_Scheduler -> SVC -> PendSv wurde verbessert.
+Der SVC Aufruf wurde aus dem Scheduler entfernt. Der Scheduler ruft nun den PendSV direkt auf.
+
+Der SVC dient stattdessen in APOS\_Start zum starten des ersten Tasks.
+Dazu wurde der SVC\_Handler in assembler implementiert (laden des PSP und Contextswitch):
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=0.7\linewidth]{Images/SvcHandler}
+	\caption{Assembler code des SVC Handlers}
+	\label{fig:svchandler}
+\end{figure}
+
+Die Verwendung des SVC ermöglicht eine saubere und sicherere Implementierung für den ersten Taskswitch. 
+
 % #################################################################################################
 %      Quellcode
 % #################################################################################################
