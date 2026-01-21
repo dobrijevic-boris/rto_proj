@@ -29,7 +29,7 @@ void TaskPoti (void)
         
         // draw potentiometer value
         char buf[TFT_BUF_SZ];
-        snprintf(buf, sizeof(buf), "Poti: %d mV", potiVal);
+        snprintf(buf, sizeof(buf), "Poti: %d mV  ", potiVal);
         
         APOS_MUTEX_LockBlocked(&mutexTft);
         Tft_DrawString(10, 18+4*24, buf);

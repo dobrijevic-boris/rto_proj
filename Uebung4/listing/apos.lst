@@ -12,102 +12,133 @@ ARM Macro Assembler    Page 1
     6 00000000                 IMPORT           APOS_Select_next_task
     7 00000000         
     8 00000000                 EXPORT           APOS_set_ctrl_pc
-    9 00000000         
-   10 00000000         APOS_set_ctrl_pc
-   11 00000000         ; pc and control done in one call
-   12 00000000 2102            MOVS             r1, #2
-   13 00000002 F381 8814       MSR              CONTROL, r1 ; set control regis
+    9 00000000                 EXPORT           SVC_Handler
+   10 00000000                 IMPORT           pCurrentTask ; Import the varia
+                                                            ble we exposed in C
+                                                            
+   11 00000000         
+   12 00000000         APOS_set_ctrl_pc
+   13 00000000         ; pc and control done in one call
+   14 00000000 2102            MOVS             r1, #2
+   15 00000002 F381 8814       MSR              CONTROL, r1 ; set control regis
                                                             ter 0x02
-   14 00000006 4700            BX               r0
-   15 00000008         
-   16 00000008         PendSV_Handler
-   17 00000008 F3EF 8009       MRS              r0, PSP     ; r0 = current PSP 
+   16 00000006 4700            BX               r0
+   17 00000008         
+   18 00000008         PendSV_Handler
+   19 00000008 F3EF 8009       MRS              r0, PSP     ; r0 = current PSP 
                                                             (thread context)
-   18 0000000C F7FF FFFE       BL               APOS_save_regs ; r0 = PSP after
+   20 0000000C F7FF FFFE       BL               APOS_save_regs ; r0 = PSP after
                                                              saving r4 r11
-   19 00000010 F7FF FFFE       BL               APOS_Select_next_task ; r0 = PS
+   21 00000010 F7FF FFFE       BL               APOS_Select_next_task ; r0 = PS
                                                             P of next task (fro
                                                             m TCB_Tasks[state])
                                                             
-   20 00000014 F7FF FFFE       BL               APOS_restore_regs ; restore r4 
+   22 00000014 F7FF FFFE       BL               APOS_restore_regs ; restore r4 
                                                             r11 and MSR PSP
-   21 00000018         ;EXC_Return to trigger new pc
-   22 00000018 4810            LDR              r0, =0xFFFFFFFD ;  restore orig
+   23 00000018         ;EXC_Return to trigger new pc
+   24 00000018 4814            LDR              r0, =0xFFFFFFFD ;  restore orig
                                                             inal EXC_RETURN
-   23 0000001A 4686            MOV              lr, r0
-   24 0000001C 4770            BX               lr          ; return
-   25 0000001E         
-   26 0000001E         
-   27 0000001E         APOS_save_regs
-   28 0000001E         ; r0: sp
-   29 0000001E         ; move sp by 8*4 bytes (r4-r11)
-   30 0000001E 3820            SUBS             r0, r0, #32
-   31 00000020         
-   32 00000020 6004            STR              r4, [r0, #0]
-   33 00000022 6045            STR              r5, [r0, #4]
-   34 00000024 6086            STR              r6, [r0, #8]
-   35 00000026 60C7            STR              r7, [r0, #12]
-   36 00000028         
-   37 00000028         ; save r8-r11 (need to move to low reg first as direct L
-                       DR not supported)
-   38 00000028 4642            MOV              r2,   r8
-   39 0000002A 6102            STR              r2,   [r0, #16]
-   40 0000002C         
-   41 0000002C 464A            MOV              r2,   r9
-   42 0000002E 6142            STR              r2,   [r0, #20]
-   43 00000030         
-   44 00000030 4652            MOV              r2,   r10
-   45 00000032 6182            STR              r2,   [r0, #24]
-   46 00000034         
-   47 00000034 465A            MOV              r2,   r11
-   48 00000036 61C2            STR              r2,   [r0, #28]
-   49 00000038         ; return value = new sp
-   50 00000038         
+   25 0000001A 4686            MOV              lr, r0
+   26 0000001C 4770            BX               lr          ; return
+   27 0000001E         
+   28 0000001E         SVC_Handler
+   29 0000001E         ; 1. Load address of pCurrentTask
+   30 0000001E 4914            LDR              R1, =pCurrentTask
+   31 00000020 680A            LDR              R2, [R1]    ; R2 = pointer to T
+                                                            CB struct
+   32 00000022         
+   33 00000022         ; 2. Load pStack from TCB (Offset 16 bytes: Name(4)+Prio
+                       (4)+Base(4)+Routine(4))
+   34 00000022 6910            LDR              R0, [R2, #16] ; R0 = pStack (pa
+                                                            ssed as arg to rest
+                                                            ore_regs)
+   35 00000024         
+   36 00000024         ; 3. Call your existing restore function
+   37 00000024 F7FF FFFE       BL               APOS_restore_regs ; Restores R4
+                                                            -R11 and sets PSP
+   38 00000028         
+   39 00000028         ; 4. Return to Thread Mode (Process Stack)
+   40 00000028 4810            LDR              R0, =0xFFFFFFFD
+   41 0000002A 4686            MOV              LR, R0
+   42 0000002C 4770            BX               LR
+   43 0000002E         
+   44 0000002E         APOS_save_regs
 
 
 
 ARM Macro Assembler    Page 2 
 
 
-   51 00000038 4770            BX               lr
-   52 0000003A         
-   53 0000003A         APOS_restore_regs
-   54 0000003A         ; r0: sp
-   55 0000003A         
-   56 0000003A         ; restore r4-r7
-   57 0000003A 6804            LDR              r4,   [r0, #0]
-   58 0000003C 6845            LDR              r5,   [r0, #4]
-   59 0000003E 6886            LDR              r6,   [r0, #8]
-   60 00000040 68C7            LDR              r7,   [r0, #12]
-   61 00000042         ; restore r8-r11 (need to move to low reg first as direc
+   45 0000002E         ; r0: sp
+   46 0000002E         ; move sp by 8*4 bytes (r4-r11)
+   47 0000002E 3820            SUBS             r0, r0, #32
+   48 00000030         
+   49 00000030 6004            STR              r4, [r0, #0]
+   50 00000032 6045            STR              r5, [r0, #4]
+   51 00000034 6086            STR              r6, [r0, #8]
+   52 00000036 60C7            STR              r7, [r0, #12]
+   53 00000038         
+   54 00000038         ; save r8-r11 (need to move to low reg first as direct L
+                       DR not supported)
+   55 00000038 4642            MOV              r2,   r8
+   56 0000003A 6102            STR              r2,   [r0, #16]
+   57 0000003C         
+   58 0000003C 464A            MOV              r2,   r9
+   59 0000003E 6142            STR              r2,   [r0, #20]
+   60 00000040         
+   61 00000040 4652            MOV              r2,   r10
+   62 00000042 6182            STR              r2,   [r0, #24]
+   63 00000044         
+   64 00000044 465A            MOV              r2,   r11
+   65 00000046 61C2            STR              r2,   [r0, #28]
+   66 00000048         ; return value = new sp
+   67 00000048         
+   68 00000048 4770            BX               lr
+   69 0000004A         
+   70 0000004A         APOS_restore_regs
+   71 0000004A         ; r0: sp
+   72 0000004A         
+   73 0000004A         ; restore r4-r7
+   74 0000004A 6804            LDR              r4,   [r0, #0]
+   75 0000004C 6845            LDR              r5,   [r0, #4]
+   76 0000004E 6886            LDR              r6,   [r0, #8]
+   77 00000050 68C7            LDR              r7,   [r0, #12]
+   78 00000052         ; restore r8-r11 (need to move to low reg first as direc
                        t LDR not supported)
-   62 00000042 6902            LDR              r2, [r0, #16]
-   63 00000044 4690            MOV              r8, r2
-   64 00000046         
-   65 00000046 6942            LDR              r2, [r0, #20]
-   66 00000048 4691            MOV              r9, r2
-   67 0000004A         
-   68 0000004A 6982            LDR              r2, [r0, #24]
-   69 0000004C 4692            MOV              r10, r2
-   70 0000004E         
-   71 0000004E 69C2            LDR              r2, [r0, #28]
-   72 00000050 4693            MOV              r11, r2
-   73 00000052         
-   74 00000052         ; add r4-r11 to sp
-   75 00000052 3020            ADDS             r0, r0, #32
-   76 00000054         ; load psp
-   77 00000054 F380 8809       MSR              PSP,  r0
-   78 00000058         
-   79 00000058 4770            BX               lr
-   80 0000005A         
-   81 0000005A                 END
+   79 00000052 6902            LDR              r2, [r0, #16]
+   80 00000054 4690            MOV              r8, r2
+   81 00000056         
+   82 00000056 6942            LDR              r2, [r0, #20]
+   83 00000058 4691            MOV              r9, r2
+   84 0000005A         
+   85 0000005A 6982            LDR              r2, [r0, #24]
+   86 0000005C 4692            MOV              r10, r2
+   87 0000005E         
+   88 0000005E 69C2            LDR              r2, [r0, #28]
+   89 00000060 4693            MOV              r11, r2
+   90 00000062         
+   91 00000062         ; add r4-r11 to sp
+   92 00000062 3020            ADDS             r0, r0, #32
+   93 00000064         ; load psp
+   94 00000064 F380 8809       MSR              PSP,  r0
+   95 00000068         
+   96 00000068 4770            BX               lr
+   97 0000006A         
+   98 0000006A                 END
               00 00 FFFFFFFD 
+              00000000 
 Command Line: --debug --xref --diag_suppress=9931,A1950W --cpu=Cortex-M0 --depe
-nd=.\output\apos_1.d -o.\output\apos_1.o -IC:\Users\dobripc\AppData\Local\Arm\P
-acks\Keil\STM32F0xx_DFP\2.1.1\Drivers\CMSIS\Device\ST\STM32F0xx\Include --prede
-fine="__EVAL SETA 1" --predefine="__MICROLIB SETA 1" --predefine="__UVISION_VER
-SION SETA 541" --predefine="STM32F072xB SETA 1" --list=.\listing\apos.lst src\A
-POS.s
+
+
+
+ARM Macro Assembler    Page 3 
+
+
+nd=.\output\apos_1.d -o.\output\apos_1.o -IC:\Users\bayer\AppData\Local\Arm\Pac
+ks\Keil\STM32F0xx_DFP\2.1.1\Drivers\CMSIS\Device\ST\STM32F0xx\Include --predefi
+ne="__EVAL SETA 1" --predefine="__MICROLIB SETA 1" --predefine="__UVISION_VERSI
+ON SETA 538" --predefine="STM32F072xB SETA 1" --list=.\listing\apos.lst src\APO
+S.s
 
 
 
@@ -122,29 +153,30 @@ Symbol: APOS_CODE
    Uses
       None
 Comment: APOS_CODE unused
-APOS_restore_regs 0000003A
+APOS_restore_regs 0000004A
 
 Symbol: APOS_restore_regs
    Definitions
-      At line 53 in file src\APOS.s
+      At line 70 in file src\APOS.s
    Uses
       At line 4 in file src\APOS.s
-      At line 20 in file src\APOS.s
+      At line 22 in file src\APOS.s
+      At line 37 in file src\APOS.s
 
-APOS_save_regs 0000001E
+APOS_save_regs 0000002E
 
 Symbol: APOS_save_regs
    Definitions
-      At line 27 in file src\APOS.s
+      At line 44 in file src\APOS.s
    Uses
       At line 3 in file src\APOS.s
-      At line 18 in file src\APOS.s
+      At line 20 in file src\APOS.s
 
 APOS_set_ctrl_pc 00000000
 
 Symbol: APOS_set_ctrl_pc
    Definitions
-      At line 10 in file src\APOS.s
+      At line 12 in file src\APOS.s
    Uses
       At line 8 in file src\APOS.s
 Comment: APOS_set_ctrl_pc used once
@@ -152,11 +184,19 @@ PendSV_Handler 00000008
 
 Symbol: PendSV_Handler
    Definitions
-      At line 16 in file src\APOS.s
+      At line 18 in file src\APOS.s
    Uses
       At line 5 in file src\APOS.s
 Comment: PendSV_Handler used once
-5 symbols
+SVC_Handler 0000001E
+
+Symbol: SVC_Handler
+   Definitions
+      At line 28 in file src\APOS.s
+   Uses
+      At line 9 in file src\APOS.s
+Comment: SVC_Handler used once
+6 symbols
 
 
 
@@ -169,7 +209,15 @@ Symbol: APOS_Select_next_task
    Definitions
       At line 6 in file src\APOS.s
    Uses
-      At line 19 in file src\APOS.s
+      At line 21 in file src\APOS.s
 Comment: APOS_Select_next_task used once
-1 symbol
-342 symbols in table
+pCurrentTask 00000000
+
+Symbol: pCurrentTask
+   Definitions
+      At line 10 in file src\APOS.s
+   Uses
+      At line 30 in file src\APOS.s
+Comment: pCurrentTask used once
+2 symbols
+344 symbols in table

@@ -59,7 +59,6 @@ extern uint32_t* APOS_save_regs(uint32_t *pStack);
 
 extern void APOS_restore_regs(uint32_t *pStack);
 
-extern void APOS_set_ctrl_pc(uint32_t pc);
 
 // ========== c functions   ==========
 // Initialisert das Echtzeitbetriebssystem
