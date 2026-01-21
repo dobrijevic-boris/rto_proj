@@ -1,0 +1,255 @@
+% Systemdokumentation OOP3
+% Unterlage für Studenten als Leitfaden für die Erstellung einer SystemDoku
+% 17. Oktober 2022
+% --- Templates -------------------------------------------------------------
+%\includegraphics{}
+
+% Dokumentklasse --------------
+\documentclass[12pt,naustrian,a4widepaper]{scrartcl}   
+% article style
+%   - 11pt Schriftgroesse
+%   - new austrian (neue Rechtschreibung)
+%   - Papierformat A4
+%   - pdf-hyperlinks
+
+% Packages --------
+%\RequirePackage{hgblistings}
+\usepackage[utf8]{inputenc}  % fuer Umlaute, äöü
+\usepackage[T1]{fontenc}
+\usepackage{a4wide}
+\usepackage{times}      % Times Schriften (zusammen mit fontencoding, s.o.)
+\usepackage{babel}
+\usepackage{graphicx}	  % für das Einbinden von Grafiken
+\usepackage{color}      % für färbigen Text
+\usepackage{framed}     % für (Text-) Rahmen
+\usepackage{listings}   % für den Sourcecode
+\usepackage{fancyhdr}   % für Kopf- und Fusszeilen
+\usepackage{pdfpages}	% pdf import fuer angabe
+
+\pagestyle{fancy}       % Kopf- / Fusszeile aktivieren
+\lstset{
+  language={C++},
+  basicstyle=\footnotesize\ttfamily,
+  keywordstyle=\color{blue},%\bfseries,
+  commentstyle=\color{green},
+  frame=single,
+  xleftmargin=0pt,
+  framexleftmargin=0pt,
+  framexrightmargin=0pt,
+  linewidth=\dimexpr\textwidth+3cm\relax,
+  breaklines=true,
+  tabsize=3,
+  numbers=left, numberstyle=\tiny, stepnumber=1, numbersep=5pt
+}
+
+% Seitenspiegel -------------
+\typearea{8}	% Festlegung des Seitenspiegels gem. Koma. 4..groß, 9..klein
+
+% Kopfzeile ---------
+\lhead{{\footnotesize{Boris Dobrijevic, Maximilian Ebert}}}   %  (links)
+\rhead{{\footnotesize{Seite \thepage}}}      %  (rechts)
+
+% Fusszeile ---------
+\lfoot{}  % links
+\cfoot{}  % mitte 
+\rfoot{}  % rechts
+
+% Absatzformatierung ------------------
+\setlength{\parindent}{0cm}   % Einrückung der 1. Zeile jedes Absatzes
+\setlength{\parskip}{10pt}    % Abstand zwischen den Absätzen
+
+% Package für Hyperlinks (mit pdf-Optionen) -----------------------------------------
+\usepackage[
+urlcolor=blue,		% blaue weblinks
+linkcolor=black,	% interne Links sind schwarz
+colorlinks=true,        % links werden eingefürbt
+pdfstartview=FitH,      % PDF-Anzeige: Fensterbreite
+pdfborder={0 0 0},      % keine Umrandung um links
+pdftitle   ={Systemdokumentation},% Referenzen in der Pdf-Datei
+pdfauthor  ={Boris Dobrijevic, Maximilian Ebert},
+pdfsubject ={Systemdoku},
+pdfcreator ={Der Creator},
+pdfproducer={Der Producer},
+pdfkeywords={Dokumentation, Systemdokumentation}
+]{hyperref}
+
+% =================================================================================================
+% =================================================================================================
+% Beginn des Dokumentes
+\begin{document}
+\selectlanguage{naustrian}   % oder "american" für engl. Texte
+
+% Titelblatt ----------
+\title {\vspace{1cm}
+       \includegraphics[width=8cm]{./Images/FhOOeLogoOkt2009_HSD_Rot_pastell}\\
+       \vspace{2cm}
+       {\textbf{Systemdokumentation\\Übung 02}}\\
+       \vspace{5mm}
+       {\small{Version 1.0}}\\
+       \vspace{5mm}
+}
+
+\author{\small{Boris Dobrijevic, Ebert Maximilian}}
+\date  {\small{Hagenberg, \today}}
+%\maketitle
+
+\includepdf[pages={1-2}]{Uebung_4_RTO.pdf}
+\clearpage
+
+% Inhalts-, Tabellen- und Bildverzeichnis (werden generiert) ----------------------------------------------------------
+\tableofcontents
+
+\clearpage
+% =================================================================================================
+% Kapitel 1 ---------------------
+\section*{Aufgabe A -- Erweiterung Mutex}
+
+\subsection*{Datenstruktur}
+Die Basis bildet die Struktur \texttt{APOS\_MUTEX}, definiert in \texttt{APOS.h}.
+Sie enthält einen Zähler für rekursive Aufrufe, einen Zeiger auf den aktuellen Besitzer und eine Warteliste für blockierte Tasks.
+Ist der Zähler höher als 0, so ist der Mutex besetzt.
+Alle Tasks, welche auf den Mutex warten, werden in einen neuen "Waiting" Zustand versetzt.
+
+\begin{lstlisting}[language=C, caption={Definition der Mutex-Struktur}]
+typedef struct {
+    uint8_t counter;
+    APOS_TCB_STRUCT* pOwner;
+    APOS_TCB_STRUCT* pWaitList;
+} APOS_MUTEX;
+\end{lstlisting}
+
+\subsection*{Implementierte Funktionen}
+
+\subsubsection*{Mutex sperren (Lock)}
+Die Funktion \texttt{APOS\_MUTEX\_LockBlocked} realisiert das Sperren.
+Besonders hervorzuheben ist hier die Implementierung der \textbf{Priority Inheritance}, um Prioritätsinversion zu vermeiden.
+Wenn ein Task blockiert werden muss, weil der Mutex belegt ist, wird geprüft, ob der aktuelle Besitzer eine niedrigere Priorität hat.
+Falls ja, wird dessen Priorität angehoben.
+Dadurch wird kein höchstpriorer Task von niedrigprioren blockiert.
+Der niedrigpriore Mutex-Hoder erhält die höhere Prio und darf arbeiten bis er fertig ist, anstatt von einem höheren unterbrochen zu werden.
+
+\begin{lstlisting}[language=C, caption={Ausschnitt aus APOS\_MUTEX\_LockBlocked}]
+void APOS_MUTEX_LockBlocked(APOS_MUTEX* pMutex) {
+    APOS_EnterCriticalRegion();
+
+    if(pMutex->counter == 0 && pMutex->pOwner != pCurrentTask) {
+        // Mutex frei: Besitzer setzen
+        pMutex->pOwner = pCurrentTask;
+        pMutex->counter++;
+    }
+    else if(pMutex->counter > 0 && pMutex->pOwner != pCurrentTask) {
+        // Mutex belegt: Task blockieren
+        
+        // Priority Inheritance: Prioritaet des Besitzers anheben
+        if(pMutex->pOwner->Priority < pCurrentTask->Priority) {
+            pMutex->pOwner->Priority = pCurrentTask->Priority;
+        }
+
+        APOS_MUTEX_InsertQueue(pMutex); // In Warteliste einsortieren
+        APOS_Scheduler();               // Kontextwechsel
+    }
+    else {
+        // Rekursiver Aufruf durch denselben Task
+        pMutex->counter++;
+    }
+    APOS_ExitCriticalRegion();
+}
+\end{lstlisting}
+
+\subsubsection*{Warteliste verwalten}
+Die Funktion \texttt{APOS\_MUTEX\_InsertQueue} sorgt dafür, dass blockierte Tasks \textit{priorisiert} in die Warteliste eingefügt werden.
+Dies garantiert Fairness nach Wichtigkeit, nicht nach Ankunftszeit.
+
+Hierbei wir der freie next-Pointer im TCB genutzt, welcher aus der Ready-Queue bekannt ist.
+Hierzu gibt es zwei Listenköpfe, einen für Waiting und einen für Read.
+Dabei kann der selbe Pointer genutzt werden, da ein Ready-Task nicht auf einen Mutex warten kann und ein Task, welcher auf Ressourcen wartet, nicht Ready sein kann.
+
+\begin{lstlisting}[language=C, caption={Sortiertes Einfügen in die Warteliste}]
+void APOS_MUTEX_InsertQueue(APOS_MUTEX* pMutex){
+    pCurrentTask->state = APOS_TASK_BLOCKED;
+
+    // Sortiertes Einfuegen (Hoehere Prioritaet zuerst)
+    APOS_TCB_STRUCT* pCurrent = pMutex->pWaitList;
+    APOS_TCB_STRUCT* pPrev = NULL_PTR;
+
+    while(pCurrent != NULL_PTR && pCurrentTask->Priority <= pCurrent->Priority) {
+        pPrev = pCurrent;
+        pCurrent = pCurrent->pNextRdy;
+    }
+    // ... Verpointerung aktualisieren ...
+}
+\end{lstlisting}
+
+\subsubsection*{Mutex freigeben (Unlock)}
+Beim Entsperren (\texttt{APOS\_MUTEX\_Unlock}) wird der Zähler dekrementiert.
+Erst wenn dieser 0 erreicht, wird der nächste Task aus der Warteliste geholt (\texttt{PopWaitingQueue}) und geweckt.
+Wichtig ist hier das Zurücksetzen der Priorität (\texttt{basePriority}), falls diese durch Priority Inheritance temporär erhöht wurde.
+
+\begin{lstlisting}[language=C, caption={Ausschnitt aus APOS\_MUTEX\_Unlock}]
+void APOS_MUTEX_Unlock(APOS_MUTEX* pMutex) {
+    APOS_EnterCriticalRegion();
+    
+    if (pMutex->counter > 0) {
+        pMutex->counter--;
+    }
+    
+    if(pMutex->counter == 0) {
+        // Naechsten Task aus der Warteliste holen
+        pMutex->pOwner = APOS_MUTEX_PopWaitingQueue(pMutex); 
+        
+        if (pMutex->pOwner != NULL_PTR) {
+            pMutex->counter = 1;
+            APOS_MUTEX_WakeTask(pMutex); // Task auf READY setzen
+        }
+        // Prioritaet auf Ursprungswert zuruecksetzen
+        pCurrentTask->Priority = pCurrentTask->basePriority;
+        APOS_Scheduler();
+    }
+    APOS_ExitCriticalRegion();
+}
+\end{lstlisting}
+
+\subsection*{Vergleich: Mutex vs. Critical Section}
+
+Im Vergleich zur Critical Section brauchen die neu implementierten Mutex länger, da mehr Aufwand betrieben wird.
+Besonders im Vergleich zum Verlassen einer Critial Region ist das Verlassen eines Mutex um einiges Aufwendiger.
+
+
+Jedoch kommt hier hinzu, dass beim Verlassen einer CS kein Scheduling erfolgen muss, beim Verlassen eines Mutex schon.
+Den größten Aufwand erzeugt hierbei die Leave Mutex Funktion, da hier in die Waiting Queue einsortiert werden muss.
+Das Eintreten in den Mutex läuft dabei relativ schnell, da nur das erste Element aus der Liste aufgerufen und entfern wird.
+
+Enter Critial Region: 1.232 us
+\includegraphics[width=.9\textwidth]{Images/criticalEnter.png}\\
+
+Exit Critial Region: 1.376 us
+\includegraphics[width=.9\textwidth]{Images/CriticalExit.png}\\
+
+Enter Mutex: 2.208 us
+\includegraphics[width=.9\textwidth]{Images/mutexLock.png}\\
+
+Exit Mutex: 6.964 us
+\includegraphics[width=.9\textwidth]{Images/mutexUnlock.png}\\
+
+
+% #################################################################################################
+%      Quellcode
+% #################################################################################################
+\clearpage
+\section{Quellcode}
+\subsection{main.c}
+% \lstinputlisting{../../Uebung3/src/main.c}
+% \subsection{APOS.h}
+% \lstinputlisting{../../Uebung3/src/APOS.h}
+% \subsection{APOS.c}
+% \lstinputlisting{../../Uebung3/src/APOS.c}
+% \subsection{TaskKey.h}
+% \lstinputlisting{../../Uebung3/src/Tasks/TaskKey.h}
+% \subsection{TaskKey.c}
+% \lstinputlisting{../../Uebung3/src/Tasks/TaskKey.c}
+% \subsection{TaskLed.h}
+% \lstinputlisting{../../Uebung3/src/Tasks/TaskLed.h}
+% \subsection{TaskLed.c}
+% \lstinputlisting{../../Uebung3/src/Tasks/TaskLed.c}
+
+\end{document}
