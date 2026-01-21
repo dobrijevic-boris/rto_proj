@@ -18,8 +18,12 @@
 #define DEBUG_PIN_TASKC GPIO_Pin_0
 
 
+// @brief Initializes the debug module
 void Debug_Init(void);
 
+// @brief Sets or resets a debug pin
+// @param uint16_t GPIO_Pin The GPIO pin to switch
+// @param BitAction action Bit_SET or Bit_RESET
 void Debug_SwitchDebugPin(uint16_t const GPIO_Pin, BitAction const action);
 
 
